@@ -48,6 +48,14 @@ GDELT_BASE_URL = "http://api.gdeltproject.org/api/v2/doc/doc"
 # Cache TTL in seconds (4 hours)
 CACHE_TTL = 4 * 60 * 60
 
+# NOTAM cache TTL (2 hours — NOTAMs change faster than threat scores)
+NOTAM_CACHE_TTL = 2 * 60 * 60
+
+# Upstash Redis (persistent cache across Render cold starts)
+UPSTASH_REDIS_URL = os.environ.get('UPSTASH_REDIS_URL')
+UPSTASH_REDIS_TOKEN = os.environ.get('UPSTASH_REDIS_TOKEN')
+NOTAM_REDIS_KEY = 'europe_notam_cache'
+
 # Rate limiting
 RATE_LIMIT = 100
 RATE_LIMIT_WINDOW = 86400
@@ -103,6 +111,68 @@ def cache_clear(key=None):
 
 
 # ========================================
+# REDIS NOTAM CACHE (persistent across deploys)
+# ========================================
+def load_notam_cache_redis():
+    """Load NOTAM cache from Upstash Redis."""
+    if UPSTASH_REDIS_URL and UPSTASH_REDIS_TOKEN:
+        try:
+            resp = requests.get(
+                f"{UPSTASH_REDIS_URL}/get/{NOTAM_REDIS_KEY}",
+                headers={"Authorization": f"Bearer {UPSTASH_REDIS_TOKEN}"},
+                timeout=5
+            )
+            data = resp.json()
+            if data.get("result"):
+                cache = json.loads(data["result"])
+                print(f"[NOTAM Cache] Loaded from Redis (cached_at: {cache.get('cached_at', 'unknown')})")
+                return cache
+        except Exception as e:
+            print(f"[NOTAM Cache] Redis load error: {e}")
+    return None
+
+
+def save_notam_cache_redis(data):
+    """Save NOTAM cache to Upstash Redis."""
+    data['cached_at'] = datetime.now(timezone.utc).isoformat()
+    if UPSTASH_REDIS_URL and UPSTASH_REDIS_TOKEN:
+        try:
+            payload = json.dumps(data, default=str)
+            resp = requests.post(
+                f"{UPSTASH_REDIS_URL}/set/{NOTAM_REDIS_KEY}",
+                headers={
+                    "Authorization": f"Bearer {UPSTASH_REDIS_TOKEN}",
+                    "Content-Type": "application/json"
+                },
+                json={"value": payload},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                print("[NOTAM Cache] ✅ Saved to Redis")
+            else:
+                print(f"[NOTAM Cache] Redis save HTTP {resp.status_code}")
+        except Exception as e:
+            print(f"[NOTAM Cache] Redis save error: {e}")
+
+
+def is_notam_cache_fresh():
+    """Check if NOTAM Redis cache is still valid (2-hour TTL)."""
+    cached = load_notam_cache_redis()
+    if not cached or 'cached_at' not in cached:
+        return False, None
+    try:
+        cached_at = datetime.fromisoformat(cached['cached_at'])
+        age = (datetime.now(timezone.utc) - cached_at).total_seconds()
+        if age < NOTAM_CACHE_TTL:
+            print(f"[NOTAM Cache] Fresh ({age/60:.0f}min old)")
+            return True, cached
+        print(f"[NOTAM Cache] Stale ({age/60:.0f}min old)")
+        return False, cached
+    except:
+        return False, None
+
+
+# ========================================
 # BACKGROUND REFRESH THREAD
 # ========================================
 def _refresh_all_caches():
@@ -129,12 +199,12 @@ def _refresh_all_caches():
             # Small delay between targets to avoid hammering APIs
             time.sleep(5)
 
-        # Refresh NOTAMs
+        # Refresh NOTAMs (uses Redis + in-memory)
         try:
-            print("[Background Refresh] Refreshing NOTAMs...")
+            print("[Background Refresh] Refreshing NOTAMs via Autorouter API...")
             notam_data = _run_notam_scan()
             cache_set('notams', notam_data)
-            print(f"[Background Refresh] ✓ NOTAMs cached ({notam_data.get('total_notams', 0)} alerts)")
+            print(f"[Background Refresh] ✓ NOTAMs cached ({notam_data.get('total_notams', 0)} critical alerts)")
         except Exception as e:
             print(f"[Background Refresh] ✗ NOTAMs failed: {e}")
 
@@ -1569,106 +1639,166 @@ def extract_casualty_data(articles):
 
 
 # ========================================
-# NOTAM SCANNING
+# NOTAM SCANNING — REAL API (v1.2.0)
+# Uses Autorouter API (Eurocontrol EAD source)
 # ========================================
+
+AUTOROUTER_NOTAM_URL = "https://api.autorouter.aero/v1.0/notam"
+
 def fetch_notams_for_region(region_key):
-    """Fetch NOTAMs for a European region using news-based NOTAM detection."""
+    """Fetch real NOTAMs from Autorouter API for a European region."""
     region = NOTAM_REGIONS.get(region_key)
     if not region:
         return []
 
     notams = []
+    fir_codes = region.get('fir_codes', [])
+    icao_codes = region.get('icao_codes', [])
+    all_codes = fir_codes + icao_codes
 
-    icao_query = ' OR '.join(region['icao_codes'][:3])
-    display_name = region['display_name']
+    if not all_codes:
+        return []
 
     try:
-        notam_query = (
-            f"({display_name} NOTAM) OR ({display_name} airspace) OR ({icao_query} airspace) OR "
-            f"({display_name} airspace closed) OR ({display_name} airspace restriction) OR "
-            f"({display_name} no-fly zone) OR ({display_name} GPS jamming) OR "
-            f"({display_name} military exercise airspace) OR ({display_name} drone airspace) OR "
-            f"({display_name} flight restriction) OR ({display_name} aviation warning)"
-        )
+        # Query Autorouter with FIR + airport codes
+        codes_json = json.dumps(all_codes[:6])  # Limit to 6 codes per query
         params = {
-            'query': notam_query,
-            'mode': 'artlist',
-            'maxrecords': 25,
-            'timespan': '7d',
-            'format': 'json',
-            'sourcelang': 'eng'
+            'itemas': codes_json,
+            'offset': 0,
+            'limit': 50
         }
 
-        response = requests.get(GDELT_BASE_URL, params=params, timeout=15)
+        headers = {
+            'User-Agent': 'AsifahAnalytics-Europe/1.2.0 (OSINT monitoring)',
+            'Accept': 'application/json'
+        }
 
-        if response.status_code == 200:
-            data = response.json()
-            articles = data.get('articles', [])
+        print(f"[NOTAM API] Fetching {region_key}: {all_codes[:6]}")
+        response = requests.get(AUTOROUTER_NOTAM_URL, params=params, headers=headers, timeout=20)
 
-            for article in articles:
-                title = (article.get('title', '') or '').upper()
-                url = article.get('url', '')
-                seen_date = article.get('seendate', '')
+        if response.status_code != 200:
+            print(f"[NOTAM API] {region_key}: HTTP {response.status_code}")
+            return []
 
-                notam_type = classify_notam(title)
-                if notam_type:
-                    notams.append({
-                        'region': region_key,
-                        'country': display_name,
-                        'flag': region['flag'],
-                        'type': notam_type['type'],
-                        'type_color': notam_type['color'],
-                        'summary': title[:200],
-                        'source': article.get('domain', 'GDELT'),
-                        'source_url': url,
-                        'issued': seen_date,
-                        'icao_codes': region['icao_codes'],
-                        'fir_codes': region['fir_codes']
-                    })
+        data = response.json()
 
+        # Autorouter returns a list of NOTAM objects
+        raw_notams = data if isinstance(data, list) else data.get('notams', data.get('rows', []))
+
+        for notam in raw_notams:
+            # Extract NOTAM text — field name varies
+            notam_text = (
+                notam.get('all', '') or
+                notam.get('text', '') or
+                notam.get('message', '') or
+                notam.get('e', '') or
+                str(notam)
+            )
+
+            # Extract item E (the actual notice text)
+            item_e = notam.get('e', '') or notam.get('itemE', '') or ''
+
+            # Use full text for classification
+            full_text = f"{notam_text} {item_e}".upper()
+
+            # Classify severity
+            classification = classify_notam(full_text)
+            if not classification:
+                continue  # Skip non-critical NOTAMs
+
+            # Extract dates
+            valid_from = notam.get('b', '') or notam.get('startValidity', '') or notam.get('effectiveStart', '')
+            valid_to = notam.get('c', '') or notam.get('endValidity', '') or notam.get('effectiveEnd', '')
+
+            # Extract ICAO location
+            icao_loc = notam.get('a', '') or notam.get('itema', '') or notam.get('location', '')
+
+            notams.append({
+                'region': region_key,
+                'country': region['display_name'],
+                'flag': region['flag'],
+                'type': classification['type'],
+                'type_color': classification['color'],
+                'summary': item_e[:250] if item_e else notam_text[:250],
+                'raw_text': notam_text[:500],
+                'icao_location': icao_loc,
+                'valid_from': valid_from,
+                'valid_to': valid_to,
+                'icao_codes': region['icao_codes'],
+                'fir_codes': region['fir_codes'],
+                'source': 'Autorouter / Eurocontrol EAD',
+                'source_url': f"https://www.autorouter.aero/notam?location={icao_loc}" if icao_loc else ''
+            })
+
+        print(f"[NOTAM API] {region_key}: {len(notams)} critical NOTAMs (from {len(raw_notams)} total)")
+
+    except requests.Timeout:
+        print(f"[NOTAM API] {region_key}: Timeout")
     except Exception as e:
-        print(f"[Europe v1.1] NOTAM scan error for {region_key}: {e}")
+        print(f"[NOTAM API] {region_key}: Error: {str(e)[:150]}")
 
-    print(f"[Europe v1.1] NOTAMs for {display_name}: Found {len(notams)} alerts")
     return notams
 
 
 def classify_notam(text):
-    """Classify a NOTAM by severity type"""
-    text_upper = text.upper() if text else ''
+    """Classify a NOTAM by severity type using pattern matching."""
+    if not text:
+        return None
 
-    if any(kw in text_upper for kw in ['CONFLICT ZONE', 'WAR ZONE', 'HOSTILE', 'ANTI-AIRCRAFT', 'SAM ']):
-        return {'type': 'Conflict Zone', 'color': 'red'}
-    if any(kw in text_upper for kw in ['AIRSPACE CLOSED', 'NO-FLY', 'NO FLY', 'PROHIBITED']):
+    text_upper = text.upper()
+
+    # Check against our critical patterns first
+    for pattern in NOTAM_CRITICAL_PATTERNS:
+        if re.search(pattern, text_upper):
+            # Determine specific type
+            if any(kw in text_upper for kw in ['CONFLICT ZONE', 'WAR ZONE', 'HOSTILE', 'ANTI-AIRCRAFT', 'SAM ']):
+                return {'type': 'Conflict Zone', 'color': 'red'}
+            if any(kw in text_upper for kw in ['AIRSPACE CLOSED', 'NO-FLY', 'NO FLY', 'PROHIBITED', 'CLSD']):
+                return {'type': 'Airspace Closure', 'color': 'red'}
+            if any(kw in text_upper for kw in ['MISSILE LAUNCH', 'MISSILE TEST', 'MISSILE FIRING', 'LIVE FIRING']):
+                return {'type': 'Missile/Live Firing', 'color': 'red'}
+            if any(kw in text_upper for kw in ['MIL EXERCISE', 'MILITARY EXERCISE', 'MIL OPS', 'MILITARY OPS', 'MILITARY OPERATIONS']):
+                return {'type': 'Military Exercise', 'color': 'orange'}
+            if any(kw in text_upper for kw in ['GPS JAMMING', 'GPS INTERFERENCE', 'GPS SPOOFING', 'NAV WARNING', 'NAVIGATION UNRELIABLE']):
+                return {'type': 'GPS Interference', 'color': 'yellow'}
+            if any(kw in text_upper for kw in ['DRONE', 'UAV', 'UAS', 'UNMANNED']):
+                return {'type': 'Drone Activity', 'color': 'orange'}
+            if any(kw in text_upper for kw in ['RESTRICTED', 'DANGER AREA', 'TEMPORARY RESTRICTION']):
+                return {'type': 'Restricted Area', 'color': 'yellow'}
+            if any(kw in text_upper for kw in ['TRIGGER', 'URGENT', 'IMMEDIATE']):
+                return {'type': 'Urgent Notice', 'color': 'orange'}
+
+            # Generic match
+            return {'type': 'Airspace Notice', 'color': 'blue'}
+
+    # Additional keyword checks not in the regex patterns
+    if any(kw in text_upper for kw in ['AIRSPACE CLOSED', 'CLSD', 'CLOSED TO ALL']):
         return {'type': 'Airspace Closure', 'color': 'red'}
-    if any(kw in text_upper for kw in ['MILITARY EXERCISE', 'MIL EXERCISE', 'LIVE FIRING', 'MISSILE LAUNCH', 'MISSILE TEST']):
+    if any(kw in text_upper for kw in ['MIL', 'MILITARY']) and any(kw in text_upper for kw in ['EXERCISE', 'OPS', 'OPERATIONS', 'ACTIVITY']):
         return {'type': 'Military Exercise', 'color': 'orange'}
-    if any(kw in text_upper for kw in ['GPS JAMMING', 'GPS INTERFERENCE', 'GPS SPOOFING', 'NAVIGATION WARNING', 'NAVIGATION UNRELIABLE']):
-        return {'type': 'GPS Interference', 'color': 'yellow'}
-    if any(kw in text_upper for kw in ['DRONE', 'UAV', 'UAS', 'UNMANNED']):
-        return {'type': 'Drone Activity', 'color': 'orange'}
-    if any(kw in text_upper for kw in ['RESTRICTED', 'DANGER AREA', 'TEMPORARY RESTRICTION']):
+    if 'DANGER AREA' in text_upper or 'RESTRICTED AREA' in text_upper:
         return {'type': 'Restricted Area', 'color': 'yellow'}
-    if 'NOTAM' in text_upper or 'AIRSPACE' in text_upper:
-        return {'type': 'Airspace Notice', 'color': 'blue'}
 
     return None
 
 
 def scan_all_europe_notams():
-    """Scan NOTAMs for all European regions"""
+    """Scan NOTAMs for all European regions using real API data."""
     all_notams = []
 
     for region_key in NOTAM_REGIONS:
         try:
             notams = fetch_notams_for_region(region_key)
             all_notams.extend(notams)
+            time.sleep(1)  # Rate limit courtesy
         except Exception as e:
-            print(f"[Europe v1.1] NOTAM scan failed for {region_key}: {e}")
+            print(f"[NOTAM API] Scan failed for {region_key}: {e}")
 
+    # Sort by severity
     severity_order = {'red': 0, 'orange': 1, 'yellow': 2, 'purple': 3, 'blue': 4, 'gray': 5}
     all_notams.sort(key=lambda x: severity_order.get(x.get('type_color', 'gray'), 5))
 
+    print(f"[NOTAM API] Total critical NOTAMs across all regions: {len(all_notams)}")
     return all_notams
 
 
@@ -2095,17 +2225,37 @@ def _run_threat_scan(target, days=7):
 
 
 def _run_notam_scan():
-    """Run a full NOTAM scan. Returns the complete response dict."""
+    """Run a full NOTAM scan with Redis caching. Returns the complete response dict."""
+
+    # Check Redis cache first
+    is_fresh, cached = is_notam_cache_fresh()
+    if is_fresh and cached:
+        cached['cached'] = True
+        cached['cache_source'] = 'redis'
+        return cached
+
+    # Run fresh scan
+    print("[NOTAM Scan] Running fresh NOTAM scan from Autorouter API...")
     notams = scan_all_europe_notams()
 
-    return {
+    result = {
         'success': True,
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'total_notams': len(notams),
         'notams': notams,
         'regions_scanned': list(NOTAM_REGIONS.keys()),
-        'version': '1.1.0-europe'
+        'data_source': 'Autorouter / Eurocontrol EAD',
+        'version': '1.2.0-europe',
+        'cached': False
     }
+
+    # Save to Redis
+    save_notam_cache_redis(result)
+
+    # Also save to in-memory cache
+    cache_set('notams', result)
+
+    return result
 
 
 def _run_flight_scan():
@@ -2295,37 +2445,6 @@ def api_europe_dashboard():
 
 
 @app.route('/api/europe/notams', methods=['GET'])
-def api_europe_notams():
-    """European NOTAMs endpoint. Cached with ?force=true override."""
-    try:
-        force = request.args.get('force', 'false').lower() == 'true'
-
-        if not force:
-            cached = cache_get('notams')
-            if cached:
-                cached['cached'] = True
-                cached['cache_age_seconds'] = int(cache_age('notams') or 0)
-                return jsonify(cached)
-
-        if not check_rate_limit():
-            return jsonify({
-                'error': 'Rate limit exceeded',
-                'rate_limit': get_rate_limit_info()
-            }), 429
-
-        data = _run_notam_scan()
-        data['cached'] = False
-        cache_set('notams', data)
-
-        return jsonify(data)
-
-    except Exception as e:
-        print(f"Error in /api/europe/notams: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'notams': []
-        }), 500
 
 
 @app.route('/api/europe/flights', methods=['GET'])
