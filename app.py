@@ -57,6 +57,8 @@ UPSTASH_REDIS_TOKEN = os.environ.get('UPSTASH_REDIS_TOKEN')
 NOTAM_REDIS_KEY = 'europe_notam_cache'
 FLIGHT_REDIS_KEY = 'europe_flight_cache'
 FLIGHT_CACHE_TTL = 12 * 60 * 60  # 12 hours
+THREAT_REDIS_PREFIX = 'europe_threat_'  # e.g. europe_threat_turkey_7d
+THREAT_CACHE_TTL = 4 * 60 * 60  # 4 hours
 
 # Rate limiting
 RATE_LIMIT = 100
@@ -233,6 +235,67 @@ def is_flight_cache_fresh():
         return False, cached
     except:
         return False, None
+
+# ========================================
+# REDIS THREAT SCORE CACHE (persistent across deploys)
+# ========================================
+def load_threat_cache_redis(target, days=7):
+    """Load threat score from Upstash Redis."""
+    key = f"{THREAT_REDIS_PREFIX}{target}_{days}d"
+    if UPSTASH_REDIS_URL and UPSTASH_REDIS_TOKEN:
+        try:
+            resp = requests.get(
+                f"{UPSTASH_REDIS_URL}/get/{key}",
+                headers={"Authorization": f"Bearer {UPSTASH_REDIS_TOKEN}"},
+                timeout=5
+            )
+            data = resp.json()
+            if data.get("result"):
+                cache = json.loads(data["result"])
+                print(f"[Threat Cache] Loaded {target} from Redis")
+                return cache
+        except Exception as e:
+            print(f"[Threat Cache] Redis load error for {target}: {e}")
+    return None
+
+
+def save_threat_cache_redis(target, data, days=7):
+    """Save threat score to Upstash Redis."""
+    key = f"{THREAT_REDIS_PREFIX}{target}_{days}d"
+    data['cached_at'] = datetime.now(timezone.utc).isoformat()
+    if UPSTASH_REDIS_URL and UPSTASH_REDIS_TOKEN:
+        try:
+            payload = json.dumps(data, default=str)
+            resp = requests.post(
+                f"{UPSTASH_REDIS_URL}/set/{key}",
+                headers={
+                    "Authorization": f"Bearer {UPSTASH_REDIS_TOKEN}",
+                    "Content-Type": "application/json"
+                },
+                json={"value": payload},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                print(f"[Threat Cache] ✅ Saved {target} to Redis")
+        except Exception as e:
+            print(f"[Threat Cache] Redis save error for {target}: {e}")
+
+
+def is_threat_cache_fresh_redis(target, days=7):
+    """Check if threat Redis cache is still valid."""
+    cached = load_threat_cache_redis(target, days)
+    if not cached or 'cached_at' not in cached:
+        return False, None
+    try:
+        cached_at = datetime.fromisoformat(cached['cached_at'])
+        age = (datetime.now(timezone.utc) - cached_at).total_seconds()
+        if age < THREAT_CACHE_TTL:
+            print(f"[Threat Cache] {target} fresh ({age/60:.0f}min old)")
+            return True, cached
+        print(f"[Threat Cache] {target} stale ({age/60:.0f}min old)")
+        return False, cached
+    except:
+        return False, None
       
 # ========================================
 # BACKGROUND REFRESH THREAD
@@ -254,6 +317,7 @@ def _refresh_all_caches():
                 print(f"[Background Refresh] Refreshing {target}...")
                 data = _run_threat_scan(target, days=7)
                 cache_set(f'threat_{target}_7d', data)
+                save_threat_cache_redis(target, data, days=7)
                 print(f"[Background Refresh] ✓ {target} cached (probability: {data.get('probability', '?')}%)")
             except Exception as e:
                 print(f"[Background Refresh] ✗ {target} failed: {e}")
@@ -348,7 +412,10 @@ SOURCE_WEIGHTS = {
             'DR (Denmark)', 'Berlingske', 'Politiken',
             'France 24', 'RFI', 'Deutsche Welle',
             'Euronews', 'EUobserver', 'Politico Europe',
-            'The Barents Observer', 'High North News'
+            'The Barents Observer', 'High North News',
+            'Daily Sabah', 'Hurriyet Daily News', 'TRT World',
+            'Cyprus Mail', 'In-Cyprus', 'Kathimerini',
+            'Ukrinform', 'Defence24', 'Notes from Poland'
         ],
         'weight': 0.85
     },
@@ -1586,7 +1653,187 @@ def fetch_arctic_today_rss():
 
     return articles
 
+# ========================================
+# ADDITIONAL RSS FEEDS (v1.3.0 — resilience)
+# ========================================
 
+def fetch_google_news_rss(query, source_label='Google News', max_articles=15):
+    """Generic Google News RSS fetcher — works for any country/topic."""
+    articles = []
+    feed_url = f"https://news.google.com/rss/search?q={query.replace(' ', '+')}&hl=en&gl=US&ceid=US:en"
+
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(feed_url, headers=headers, timeout=15)
+
+        if response.status_code != 200:
+            print(f"[{source_label}] HTTP {response.status_code}")
+            return []
+
+        root = ET.fromstring(response.content)
+        items = root.findall('.//item')
+
+        for item in items[:max_articles]:
+            title_elem = item.find('title')
+            link_elem = item.find('link')
+            pubDate_elem = item.find('pubDate')
+
+            if title_elem is not None and link_elem is not None:
+                pub_date = pubDate_elem.text if pubDate_elem is not None else datetime.now(timezone.utc).isoformat()
+                articles.append({
+                    'title': title_elem.text or '',
+                    'description': title_elem.text or '',
+                    'url': link_elem.text or '',
+                    'publishedAt': pub_date,
+                    'source': {'name': source_label},
+                    'content': title_elem.text or '',
+                    'language': 'en'
+                })
+
+        print(f"[{source_label}] ✓ {len(articles)} articles")
+
+    except ET.ParseError as e:
+        print(f"[{source_label}] XML parse error: {str(e)[:100]}")
+    except Exception as e:
+        print(f"[{source_label}] Error: {str(e)[:100]}")
+
+    return articles
+
+
+def fetch_daily_sabah_rss():
+    """Fetch articles from Daily Sabah (Turkish English-language newspaper)."""
+    articles = []
+    feed_url = 'https://www.dailysabah.com/rssFeed/defense'
+
+    try:
+        print("[Europe v1.3] Daily Sabah: Fetching RSS...")
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(feed_url, headers=headers, timeout=15)
+
+        if response.status_code != 200:
+            print(f"[Europe v1.3] Daily Sabah: HTTP {response.status_code}")
+            return []
+
+        root = ET.fromstring(response.content)
+        items = root.findall('.//item')
+
+        for item in items[:15]:
+            title_elem = item.find('title')
+            link_elem = item.find('link')
+            pubDate_elem = item.find('pubDate')
+            description_elem = item.find('description')
+
+            if title_elem is not None and link_elem is not None:
+                pub_date = pubDate_elem.text if pubDate_elem is not None else datetime.now(timezone.utc).isoformat()
+                description = description_elem.text[:500] if description_elem is not None and description_elem.text else ''
+
+                articles.append({
+                    'title': title_elem.text or '',
+                    'description': description,
+                    'url': link_elem.text or '',
+                    'publishedAt': pub_date,
+                    'source': {'name': 'Daily Sabah'},
+                    'content': description,
+                    'language': 'en'
+                })
+
+        print(f"[Europe v1.3] Daily Sabah: ✓ {len(articles)} articles")
+
+    except Exception as e:
+        print(f"[Europe v1.3] Daily Sabah error: {str(e)[:100]}")
+
+    return articles
+
+
+def fetch_ukrinform_rss():
+    """Fetch articles from Ukrinform (Ukrainian state news agency, English)."""
+    articles = []
+    feed_url = 'https://www.ukrinform.net/rss/block-lastnews'
+
+    try:
+        print("[Europe v1.3] Ukrinform: Fetching RSS...")
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(feed_url, headers=headers, timeout=15)
+
+        if response.status_code != 200:
+            print(f"[Europe v1.3] Ukrinform: HTTP {response.status_code}")
+            return []
+
+        root = ET.fromstring(response.content)
+        items = root.findall('.//item')
+
+        for item in items[:20]:
+            title_elem = item.find('title')
+            link_elem = item.find('link')
+            pubDate_elem = item.find('pubDate')
+            description_elem = item.find('description')
+
+            if title_elem is not None and link_elem is not None:
+                pub_date = pubDate_elem.text if pubDate_elem is not None else datetime.now(timezone.utc).isoformat()
+                description = description_elem.text[:500] if description_elem is not None and description_elem.text else ''
+
+                articles.append({
+                    'title': title_elem.text or '',
+                    'description': description,
+                    'url': link_elem.text or '',
+                    'publishedAt': pub_date,
+                    'source': {'name': 'Ukrinform'},
+                    'content': description,
+                    'language': 'en'
+                })
+
+        print(f"[Europe v1.3] Ukrinform: ✓ {len(articles)} articles")
+
+    except Exception as e:
+        print(f"[Europe v1.3] Ukrinform error: {str(e)[:100]}")
+
+    return articles
+
+
+def fetch_moscow_times_rss():
+    """Fetch articles from Moscow Times (independent Russian media, English)."""
+    articles = []
+    feed_url = 'https://www.themoscowtimes.com/rss/news'
+
+    try:
+        print("[Europe v1.3] Moscow Times: Fetching RSS...")
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(feed_url, headers=headers, timeout=15)
+
+        if response.status_code != 200:
+            print(f"[Europe v1.3] Moscow Times: HTTP {response.status_code}")
+            return []
+
+        root = ET.fromstring(response.content)
+        items = root.findall('.//item')
+
+        for item in items[:20]:
+            title_elem = item.find('title')
+            link_elem = item.find('link')
+            pubDate_elem = item.find('pubDate')
+            description_elem = item.find('description')
+
+            if title_elem is not None and link_elem is not None:
+                pub_date = pubDate_elem.text if pubDate_elem is not None else datetime.now(timezone.utc).isoformat()
+                description = description_elem.text[:500] if description_elem is not None and description_elem.text else ''
+
+                articles.append({
+                    'title': title_elem.text or '',
+                    'description': description,
+                    'url': link_elem.text or '',
+                    'publishedAt': pub_date,
+                    'source': {'name': 'Moscow Times'},
+                    'content': description,
+                    'language': 'en'
+                })
+
+        print(f"[Europe v1.3] Moscow Times: ✓ {len(articles)} articles")
+
+    except Exception as e:
+        print(f"[Europe v1.3] Moscow Times error: {str(e)[:100]}")
+
+    return articles
+  
 # ========================================
 # CASUALTY TRACKING (for Ukraine/Russia)
 # ========================================
@@ -2133,14 +2380,54 @@ def _run_threat_scan(target, days=7):
             rss_articles.extend(fetch_isw_rss())
         except Exception as e:
             print(f"ISW RSS error: {e}")
+        try:
+            rss_articles.extend(fetch_ukrinform_rss())
+        except Exception as e:
+            print(f"Ukrinform RSS error: {e}")
+        try:
+            rss_articles.extend(fetch_moscow_times_rss())
+        except Exception as e:
+            print(f"Moscow Times RSS error: {e}")
+
+    if target == 'ukraine':
+        try:
+            rss_articles.extend(fetch_google_news_rss('Ukraine war OR missile OR drone OR frontline OR offensive', 'Ukraine War News'))
+        except Exception as e:
+            print(f"Ukraine Google News error: {e}")
+
+    if target == 'russia':
+        try:
+            rss_articles.extend(fetch_google_news_rss('Russia military OR Ukraine OR nuclear OR mobilization OR sanctions', 'Russia News'))
+        except Exception as e:
+            print(f"Russia Google News error: {e}")
 
     if target == 'greenland':
         try:
             rss_articles.extend(fetch_arctic_today_rss())
         except Exception as e:
             print(f"Arctic Today RSS error: {e}")
+        try:
+            rss_articles.extend(fetch_google_news_rss('Greenland sovereignty OR arctic OR military OR NATO', 'Greenland News'))
+        except Exception as e:
+            print(f"Greenland Google News error: {e}")
+
+    if target == 'poland':
+        try:
+            rss_articles.extend(fetch_google_news_rss('Poland military OR NATO OR border OR drone OR airspace', 'Poland News'))
+        except Exception as e:
+            print(f"Poland Google News error: {e}")
 
     if target == 'turkey':
+        # Turkey RSS feeds (v1.3.0)
+        try:
+            rss_articles.extend(fetch_daily_sabah_rss())
+        except Exception as e:
+            print(f"Daily Sabah RSS error: {e}")
+        try:
+            rss_articles.extend(fetch_google_news_rss('Turkey military OR Incirlik OR Erdogan OR missile OR intercept', 'Turkey News'))
+        except Exception as e:
+            print(f"Turkey Google News error: {e}")
+
         # Fetch Turkey-specific war GDELT queries
         turkey_war_queries = [
             ('Turkey intercept missile Iran', 'eng'),
@@ -2160,6 +2447,12 @@ def _run_threat_scan(target, days=7):
                 print(f"Turkey GDELT ({lang}) error: {e}")
 
     if target == 'cyprus':
+        # Cyprus RSS feeds (v1.3.0)
+        try:
+            rss_articles.extend(fetch_google_news_rss('Cyprus military OR Akrotiri OR drone OR attack OR evacuation', 'Cyprus News'))
+        except Exception as e:
+            print(f"Cyprus Google News error: {e}")
+
         # Fetch Cyprus-specific war GDELT queries
         cyprus_war_queries = [
             ('Cyprus Akrotiri drone attack Iran', 'eng'),
@@ -2412,13 +2705,24 @@ def api_europe_threat(target):
         cache_key = f'threat_{target}_{days}d'
         # Return cached data if available and not forced
         if not force:
+            # Check in-memory first (fastest)
             cached = cache_get(cache_key)
             if cached:
                 cached['cached'] = True
+                cached['cache_source'] = 'memory'
                 age = cache_age(cache_key)
                 cached['cache_age_seconds'] = int(age) if age else 0
                 cached['cache_age_human'] = f"{int(age / 60)}m ago" if age else 'unknown'
                 return jsonify(cached)
+
+            # Check Redis (survives deploys)
+            is_fresh, redis_cached = is_threat_cache_fresh_redis(target, days)
+            if is_fresh and redis_cached:
+                redis_cached['cached'] = True
+                redis_cached['cache_source'] = 'redis'
+                redis_cached['cache_age_human'] = 'from redis'
+                cache_set(cache_key, redis_cached)  # Warm in-memory
+                return jsonify(redis_cached)
         # Fresh scan required — check rate limit
         if not check_rate_limit():
             return jsonify({
@@ -2434,8 +2738,9 @@ def api_europe_threat(target):
         response_data['cached'] = False
         response_data['cache_age_seconds'] = 0
         response_data['cache_age_human'] = 'fresh scan'
-        # Store in cache
+        # Store in cache (memory + Redis)
         cache_set(cache_key, response_data)
+        save_threat_cache_redis(target, response_data, days)
         return jsonify(response_data)
     except Exception as e:
         print(f"Error in /api/europe/threat/{target}: {e}")
