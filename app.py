@@ -36,6 +36,14 @@ import xml.etree.ElementTree as ET
 import threading
 import json
 
+try:
+    from telegram_signals_europe import fetch_europe_telegram_signals
+    TELEGRAM_AVAILABLE = True
+    print("[Europe Backend] ✅ Telegram signals available")
+except ImportError:
+    TELEGRAM_AVAILABLE = False
+    print("[Europe Backend] ⚠️ Telegram signals not available")
+
 app = Flask(__name__)
 # CORS handled by after_request handler
 
@@ -2456,8 +2464,28 @@ def _run_threat_scan(target, days=7):
             except Exception as e:
                 print(f"Cyprus GDELT error: {e}")
 
+    telegram_articles = []
+    if TELEGRAM_AVAILABLE:
+        try:
+            telegram_msgs = fetch_europe_telegram_signals(hours_back=days*24, include_extended=True)
+            if telegram_msgs:
+                for msg in telegram_msgs:
+                    telegram_articles.append({
+                        'title': msg.get('title', '')[:200],
+                        'description': msg.get('title', '')[:500],
+                        'url': msg.get('url', ''),
+                        'publishedAt': msg.get('published', ''),
+                        'source': {'name': msg.get('source', 'Telegram')},
+                        'content': msg.get('title', '')[:500],
+                        'language': 'multi'
+                    })
+                print(f"[Europe Scan] Telegram: {len(telegram_articles)} messages")
+        except Exception as e:
+            print(f"[Europe Scan] Telegram error: {str(e)[:100]}")
+
     all_articles = (articles_en + articles_gdelt_en + articles_gdelt_ru +
                    articles_gdelt_fr + articles_gdelt_uk + articles_reddit +
+                   rss_articles + telegram_articles)_fr + articles_gdelt_uk + articles_reddit +
                    rss_articles)
 
     # Score
