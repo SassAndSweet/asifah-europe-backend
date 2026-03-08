@@ -392,7 +392,9 @@ TRAVEL_ADVISORY_CODES = {
     'russia': ['RS'],
     'poland': ['PL'],
     'turkey': ['TU'],
-    'cyprus': ['CY']
+    'cyprus': ['CY'],
+    'azerbaijan': ['AJ'],
+    'armenia': ['AM'],
 }
 
 TRAVEL_ADVISORY_LEVELS = {
@@ -627,6 +629,14 @@ TARGET_BASELINES = {
     'cyprus': {
         'base_adjustment': +10,
         'description': 'Active Iranian drone strikes on RAF Akrotiri; European reinforcements deploying; US evacuation'
+    },
+    'azerbaijan': {
+        'base_adjustment': +8,
+        'description': 'Iranian border tensions; drone supplier to region; Nagorno-Karabakh victor; energy corridor risk'
+    },
+    'armenia': {
+        'base_adjustment': +5,
+        'description': 'Post-Karabakh vulnerability; Russian alliance strain; Iranian border proximity'
     }
 }
 
@@ -799,6 +809,41 @@ TARGET_KEYWORDS = {
             'British forces', 'Mediterranean', 'Turkey Cyprus',
             'intercept', 'drone', 'attack', 'missile', 'Greek F-16'
         ]
+    },
+    'azerbaijan': {
+        'keywords': [
+            'azerbaijan', 'azerbaijani', 'baku', 'aliyev',
+            'nagorno-karabakh', 'karabakh', 'nakhchivan',
+            'azerbaijan military', 'azerbaijan army', 'azerbaijan drone',
+            'azerbaijan turkey', 'azerbaijan israel', 'azerbaijan iran',
+            'baku tbilisi ceyhan', 'btc pipeline', 'shah deniz',
+            'azerbaijan gas', 'azerbaijan oil', 'socar',
+            'azerbaijan armenia', 'lachin corridor', 'zangezur corridor',
+            'azerbaijan attack', 'azerbaijan mobilization',
+            'iran azerbaijan', 'iran baku', 'iran border azerbaijan',
+            'Азербайджан', 'Баку',
+        ],
+        'reddit_keywords': [
+            'Azerbaijan', 'Baku', 'Aliyev', 'Karabakh', 'Armenia Azerbaijan',
+            'Nagorno', 'drone', 'Turkey Azerbaijan', 'Iran Azerbaijan'
+        ]
+    },
+    'armenia': {
+        'keywords': [
+            'armenia', 'armenian', 'yerevan', 'pashinyan',
+            'armenia military', 'armenian army', 'armenia defense',
+            'armenia russia', 'armenia nato', 'armenia eu',
+            'armenia azerbaijan', 'armenia border', 'armenia attack',
+            'armenia iran', 'armenia turkey', 'syunik',
+            'zangezur corridor', 'lachin', 'artsakh',
+            'armenia mobilization', 'armenia protest',
+            'CSTO', 'armenia peacekeepers', 'armenia genocide',
+            'Армения', 'Ереван',
+        ],
+        'reddit_keywords': [
+            'Armenia', 'Yerevan', 'Pashinyan', 'Karabakh', 'Azerbaijan Armenia',
+            'CSTO', 'Russia Armenia', 'Turkey Armenia', 'Iran Armenia'
+        ]
     }
 }
 
@@ -812,7 +857,9 @@ REDDIT_SUBREDDITS = {
     'russia': ['russia', 'europe', 'geopolitics', 'worldnews'],
     'poland': ['poland', 'Polska', 'europe', 'geopolitics', 'worldnews'],
     'turkey': ['Turkey', 'turkish', 'europe', 'geopolitics', 'worldnews', 'syriancivilwar'],
-    'cyprus': ['cyprus', 'europe', 'geopolitics', 'worldnews', 'unitedkingdom']
+    'cyprus': ['cyprus', 'europe', 'geopolitics', 'worldnews', 'unitedkingdom'],
+    'azerbaijan': ['azerbaijan', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense'],
+    'armenia': ['armenia', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense', 'ArmeniaAzerbaijan']
 }
 
 # ========================================
