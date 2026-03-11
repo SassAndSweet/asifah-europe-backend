@@ -304,30 +304,31 @@ def fetch_ukraine_news():
     except Exception as e:
         print(f"[Ukraine News] Ukrinform error: {str(e)[:80]}")
 
-    # ── 2. Kyiv Independent RSS ──
-    try:
-        response = requests.get(
-            'https://kyivindependent.com/feed/',
-            timeout=10,
-            headers={'User-Agent': 'Mozilla/5.0'}
-        )
-        if response.status_code == 200:
-            root = ET.fromstring(response.content)
-            items = root.findall('.//item')
-            for item in items[:15]:
-                title = item.find('title')
-                link = item.find('link')
-                pub = item.find('pubDate')
-                if title is not None:
-                    all_articles['kyiv_independent'].append({
-                        'title': title.text or '',
-                        'url': link.text if link is not None else '',
-                        'published': pub.text if pub is not None else '',
-                        'source': 'Kyiv Independent'
-                    })
-            print(f"[Ukraine News] Kyiv Independent: {len(all_articles['kyiv_independent'])} articles")
-    except Exception as e:
-        print(f"[Ukraine News] Kyiv Independent error: {str(e)[:80]}")
+    # ── 2. Ukrainska Pravda (English) + Kyiv Post RSS ──
+    for rss_name, rss_url in [('Ukrainska Pravda', 'https://www.pravda.com.ua/eng/rss/view_news/'), ('Kyiv Post', 'https://www.kyivpost.com/feed')]:
+        try:
+            response = requests.get(
+                rss_url,
+                timeout=10,
+                headers={'User-Agent': 'Mozilla/5.0'}
+            )
+            if response.status_code == 200:
+                root = ET.fromstring(response.content)
+                items = root.findall('.//item')
+                for item in items[:10]:
+                    title = item.find('title')
+                    link = item.find('link')
+                    pub = item.find('pubDate')
+                    if title is not None:
+                        all_articles['kyiv_independent'].append({
+                            'title': title.text or '',
+                            'url': link.text if link is not None else '',
+                            'published': pub.text if pub is not None else '',
+                            'source': rss_name
+                        })
+                print(f"[Ukraine News] {rss_name}: {len(items[:10])} articles")
+        except Exception as e:
+            print(f"[Ukraine News] {rss_name} error: {str(e)[:80]}")
 
     # ── 3. GDELT English ──
     try:
