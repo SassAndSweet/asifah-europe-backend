@@ -1176,6 +1176,97 @@ def calculate_advisory_floor(signal_type, signal_detected_at):
     return 0
 
 
+# ============================================
+# RHETORIC + MILITARY POSTURE BOOST HELPERS
+# v1.2.0 — April 2026
+# Reads Greenland rhetoric tracker from Redis and
+# military posture alert level to apply calibrated
+# boosts to calculate_threat_probability().
+# Same pattern as ME backend Lebanon/Yemen wiring.
+# ============================================
+
+# Rhetoric level → probability boost (Greenland inverted model:
+# US pressure = primary threat signal, not classic outbound strike actor)
+RHETORIC_BOOST_TABLE = {
+    0: 0,    # Baseline — no boost
+    1: 2,    # Rhetoric — minor signal
+    2: 6,    # Pressure — active coercion detected
+    3: 10,   # Crisis — formal protests, NATO consultations
+    4: 14,   # Confrontation — unilateral actions, military deployment
+    5: 20,   # Rupture — military incident, annexation attempt
+}
+
+# Military posture alert_level → probability boost
+MILITARY_POSTURE_BOOST_TABLE = {
+    'normal':   0,
+    'elevated': 4,
+    'high':     9,
+    'surge':    15,
+}
+
+
+def _get_greenland_rhetoric_level():
+    """
+    Read Greenland rhetoric tracker composite level from Redis.
+    Returns (theatre_level, us_pressure_level) tuple.
+    Falls back to (0, 0) gracefully if unavailable.
+    """
+    try:
+        if not UPSTASH_REDIS_URL or not UPSTASH_REDIS_TOKEN:
+            return 0, 0
+        resp = requests.get(
+            f'{UPSTASH_REDIS_URL}/get/rhetoric:greenland:latest',
+            headers={'Authorization': f'Bearer {UPSTASH_REDIS_TOKEN}'},
+            timeout=4
+        )
+        result = resp.json().get('result')
+        if not result:
+            return 0, 0
+        data = json.loads(result)
+        theatre_level  = data.get('theatre_level', 0)
+        us_level       = data.get('us_pressure_level', 0)
+        print(f'[Europe v1.2] Greenland rhetoric: theatre L{theatre_level}, US pressure L{us_level}')
+        return theatre_level, us_level
+    except Exception as e:
+        print(f'[Europe v1.2] Rhetoric Redis read error: {str(e)[:80]}')
+        return 0, 0
+
+
+def _get_military_posture_level(target):
+    """
+    Read military tracker alert level for a target from Redis.
+    Returns alert_level string ('normal','elevated','high','surge').
+    Falls back to 'normal' gracefully.
+    """
+    try:
+        if not UPSTASH_REDIS_URL or not UPSTASH_REDIS_TOKEN:
+            return 'normal'
+        # Military tracker writes to 'military_cache' key
+        resp = requests.get(
+            f'{UPSTASH_REDIS_URL}/get/military_cache',
+            headers={'Authorization': f'Bearer {UPSTASH_REDIS_TOKEN}'},
+            timeout=4
+        )
+        result = resp.json().get('result')
+        if not result:
+            return 'normal'
+        data = json.loads(result)
+        actors = data.get('actors', {})
+        # Find the target actor — try exact match then partial
+        actor_data = actors.get(target, {})
+        if not actor_data:
+            for k, v in actors.items():
+                if target in k or k in target:
+                    actor_data = v
+                    break
+        level = actor_data.get('alert_level', 'normal')
+        print(f'[Europe v1.2] Military posture {target}: {level}')
+        return level
+    except Exception as e:
+        print(f'[Europe v1.2] Military posture Redis read error: {str(e)[:80]}')
+        return 'normal'
+
+
 def calculate_threat_probability(articles, days_analyzed=7, target='ukraine'):
     """
     Calculate sophisticated threat probability score.
@@ -1300,6 +1391,54 @@ def calculate_threat_probability(articles, days_analyzed=7, target='ukraine'):
     # Final cap (advisory floor can push to 95% max, never 100%)
     probability = min(probability, 95)
 
+    # ============================================
+    # v1.2.0: RHETORIC + MILITARY POSTURE BOOSTS
+    # Applied after advisory floor — highest signal wins.
+    # Greenland only for now (only live rhetoric tracker).
+    # Ukraine/Russia/Poland wired when trackers go live.
+    # ============================================
+    rhetoric_boost    = 0
+    mil_boost         = 0
+    rhetoric_level    = 0
+    us_pressure_level = 0
+    mil_posture       = 'normal'
+
+    if target == 'greenland':
+        # Read rhetoric tracker — theatre level drives primary boost.
+        # US pressure level adds secondary signal (it's the threat actor here).
+        rhetoric_level, us_pressure_level = _get_greenland_rhetoric_level()
+        rhetoric_boost = RHETORIC_BOOST_TABLE.get(rhetoric_level, 0)
+
+        # US pressure amplifier: if US pressure level yields a higher boost,
+        # use that instead (more conservative = higher probability)
+        us_boost = RHETORIC_BOOST_TABLE.get(us_pressure_level, 0)
+        if us_boost > rhetoric_boost:
+            rhetoric_boost = us_boost
+            print(f'[Europe v1.2] Greenland: US pressure L{us_pressure_level} overrides theatre L{rhetoric_level} boost')
+
+        # Military posture — Danish/NATO military activity is the
+        # sovereignty defense signal (Arktisk Kommando surge, frigate deploy)
+        mil_posture = _get_military_posture_level('denmark')
+        if mil_posture == 'normal':
+            mil_posture = _get_military_posture_level('greenland')
+        mil_boost = MILITARY_POSTURE_BOOST_TABLE.get(mil_posture, 0)
+
+    elif target in ('ukraine', 'russia'):
+        # Wire rhetoric boost when Ukraine/Russia trackers go live
+        mil_posture = _get_military_posture_level(target)
+        mil_boost   = MILITARY_POSTURE_BOOST_TABLE.get(mil_posture, 0)
+
+    elif target == 'poland':
+        mil_posture = _get_military_posture_level('poland')
+        mil_boost   = MILITARY_POSTURE_BOOST_TABLE.get(mil_posture, 0)
+
+    total_boost = rhetoric_boost + mil_boost
+
+    if total_boost > 0:
+        pre_boost   = probability
+        probability = min(95, probability + total_boost)
+        print(f'[Europe v1.2] {target} boost: rhetoric +{rhetoric_boost} (L{rhetoric_level}) + mil +{mil_boost} ({mil_posture}) = +{total_boost} | {pre_boost}% → {probability}%')
+
     print(f"[Europe v1.1] {target} scoring:")
     print(f"  Base score: {base_score}")
     print(f"  Baseline adjustment: {baseline_adjustment}")
@@ -1327,6 +1466,11 @@ def calculate_threat_probability(articles, days_analyzed=7, target='ukraine'):
             'advisory_signal_type': diplomatic_signal.get('signal_type'),
             'advisory_signal_phrase': diplomatic_signal.get('signal_phrase'),
             'advisory_signal_source': diplomatic_signal.get('signal_source'),
+            'rhetoric_boost':         rhetoric_boost,
+            'rhetoric_level':         rhetoric_level,
+            'us_pressure_level':      us_pressure_level,
+            'military_posture':       mil_posture,
+            'military_boost':         mil_boost,
             'time_decay_applied': True,
             'source_weighting_applied': True,
             'formula': 'max(base(25) + adjustment + (weighted_score * 0.8), advisory_floor)'
