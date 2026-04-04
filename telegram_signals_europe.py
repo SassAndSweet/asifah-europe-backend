@@ -101,7 +101,73 @@ EXTENDED_EUROPE_CHANNELS = [
 
     # Additional OSINT
     'SouthFrontEN',        # South Front — conflict analysis
+
+    # ── NEW: Greenland / Nordic / Arctic sovereignty (v1.1.0) ──
+    'arctictoday',         # Arctic Today — dedicated Arctic news, Greenland coverage
+    'high_north_news',     # High North News — Norwegian Arctic affairs outlet
+    'NuukToday',           # Nuuk Today — Greenlandic local news
+    'DanishMFA',           # Danish Ministry of Foreign Affairs
+    'NATOnorth',           # NATO Northern Command / Allied forces north
+    'NorwayMFA',           # Norwegian MFA — key Arctic sovereignty voice
+    'IcelandicMFA',        # Iceland MFA — Arctic Council, GIUK gap signals
+    'GeopoliticsNorth',    # Nordic/Arctic geopolitics OSINT
+    'ArcticSecurity',      # Arctic security monitoring channel
 ]
+
+# ── Greenland-specific channel list (v1.1.0) ──
+# Used by rhetoric_tracker_greenland.py
+# Focuses on U.S. pressure, Danish/NATO response,
+# Inuit voice, Russian Arctic opportunism, Nordic OSINT
+GREENLAND_CHANNELS = [
+    # U.S. pressure signals
+    'CentcomOfficial',     # CENTCOM — U.S. military posture statements
+    'StateDeptSpox',       # State Dept spokesperson — U.S. diplomatic framing
+    # Danish government / sovereignty response
+    'DanishMFA',           # Danish Ministry of Foreign Affairs
+    'DanishDefence',       # Danish Defence Command
+    # Greenlandic voice
+    'NuukToday',           # Nuuk Today — Greenlandic local news
+    'KNR_Greenland',       # KNR — Kalaallit Nunaata Radioa (Greenlandic Broadcasting)
+    # NATO / Nordic allies
+    'NATOpress',           # NATO official
+    'NorwayMFA',           # Norwegian MFA — Nordic solidarity
+    'IcelandicMFA',        # Iceland — Arctic Council, GIUK gap signals
+    # Russia Arctic opportunism
+    'mod_russia_en',       # Russian MoD English — Arctic posturing
+    'IntelSlava',          # Intel Slava — Russia Arctic signals
+    # Arctic OSINT
+    'arctictoday',         # Arctic Today — dedicated Greenland/Arctic
+    'high_north_news',     # High North News — Norwegian Arctic outlet
+    'GeoPWatch',           # Geopolitics Watch — broader Arctic OSINT
+    'OSINTdefender',       # OSINT Defender — general high-signal
+]
+
+
+def fetch_greenland_telegram_signals(hours_back=48):
+    """
+    Fetch Telegram signals for Greenland sovereignty rhetoric tracker.
+    Uses 48h window — Greenland moves slower than active warzones.
+    """
+    if not _telegram_available():
+        print("[Telegram Greenland] Signals unavailable — skipping")
+        return []
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                future = pool.submit(asyncio.run, _async_fetch_messages(GREENLAND_CHANNELS, hours_back))
+                return future.result(timeout=120)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(_async_fetch_messages(GREENLAND_CHANNELS, hours_back))
+            finally:
+                loop.close()
+    except Exception as e:
+        print(f"[Telegram Greenland] ❌ fetch error: {str(e)[:200]}")
+        return []
 
 
 def _telegram_available():
