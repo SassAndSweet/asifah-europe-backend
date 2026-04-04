@@ -318,6 +318,119 @@ RSS_FEEDS = [
     'https://news.google.com/rss/search?q=grønland+suverænitet+OR+arktisk+kommando+OR+dansk+forsvar+grønland&hl=da&gl=DK&ceid=DK:da',
 ]
 
+# ============================================
+# NITTER FEEDS — Primary source Twitter/X accounts
+# Mirror fallback: if mirror 1 fails, try mirror 2, etc.
+# No API key required — public RSS.
+# ============================================
+NITTER_MIRRORS = [
+    'nitter.poast.org',
+    'nitter.privacydev.net',
+    'nitter.tiekoetter.com',
+]
+
+# Account list: (username, weight, description)
+# Weight > 1.0 = primary source (direct government statement)
+NITTER_ACCOUNTS = [
+    # US pressure actors
+    ('realDonaldTrump',   1.2, 'Trump direct statements on Greenland'),
+    ('SecRubio',          1.1, 'US Secretary of State — Greenland/Arctic'),
+    ('POTUS',             1.0, 'White House official account'),
+    # Danish government
+    ('Statsmin',          1.2, 'Danish Prime Minister'),
+    ('DanishMFA',         1.1, 'Danish Ministry of Foreign Affairs'),
+    ('DanishDefence',     1.1, 'Danish Defence Command'),
+    # Greenlandic government
+    ('NaalakMut',         1.2, 'Naalakkersuisut — Greenland government'),
+    # NATO / multilateral
+    ('NATO',              1.0, 'NATO official — Arctic posture signals'),
+    ('SecGen_NATO',       1.0, 'NATO Secretary General'),
+    # Arctic / Nordic monitoring
+    ('ArcticCouncil',     0.9, 'Arctic Council — multilateral signals'),
+    ('NordicCouncil',     0.9, 'Nordic Council'),
+]
+
+
+def _fetch_nitter(username, weight=1.0, timeout=8):
+    """
+    Fetch RSS for a Twitter/X account via Nitter mirror fallback.
+    Tries each mirror in order until one succeeds.
+    Returns list of articles with source tagged as 'Nitter @{username}'.
+    """
+    articles = []
+    headers = {'User-Agent': 'Mozilla/5.0 (compatible; AsifahAnalytics/1.0)'}
+
+    for mirror in NITTER_MIRRORS:
+        url = f'https://{mirror}/{username}/rss'
+        try:
+            resp = requests.get(url, headers=headers, timeout=timeout)
+            if resp.status_code != 200:
+                continue
+            root = ET.fromstring(resp.content)
+            for item in root.findall('.//item')[:20]:
+                title_el   = item.find('title')
+                link_el    = item.find('link')
+                pubdate_el = item.find('pubDate')
+                desc_el    = item.find('description')
+                if title_el is None:
+                    continue
+                title = title_el.text or ''
+                link  = link_el.text if link_el is not None else ''
+                pub   = ''
+                if pubdate_el is not None and pubdate_el.text:
+                    try:
+                        pub = parsedate_to_datetime(pubdate_el.text).isoformat()
+                    except Exception:
+                        pub = pubdate_el.text or ''
+                desc = ''
+                if desc_el is not None and desc_el.text:
+                    # Strip HTML tags from Nitter descriptions
+                    import re
+                    desc = re.sub(r'<[^>]+>', '', desc_el.text)[:300]
+                articles.append({
+                    'title':     title,
+                    'url':       link,
+                    'published': pub,
+                    'source':    f'Nitter @{username}',
+                    'body':      f'{title} {desc}'.lower(),
+                    'nitter_weight': weight,
+                })
+            if articles:
+                print(f'[Greenland Rhetoric/Nitter] @{username}: {len(articles)} posts via {mirror}')
+                return articles  # Success — don't try other mirrors
+        except Exception as e:
+            print(f'[Greenland Rhetoric/Nitter] @{username} mirror {mirror} failed: {str(e)[:60]}')
+            continue
+
+    if not articles:
+        print(f'[Greenland Rhetoric/Nitter] @{username}: all mirrors failed')
+    return articles
+
+
+def _fetch_all_nitter(days=5):
+    """Fetch from all Nitter accounts and filter by recency."""
+    import re
+    all_posts = []
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    for username, weight, desc in NITTER_ACCOUNTS:
+        posts = _fetch_nitter(username, weight=weight)
+        for p in posts:
+            # Filter to recency window
+            if p.get('published'):
+                try:
+                    pub_dt = datetime.fromisoformat(p['published'].replace('Z', '+00:00'))
+                    if pub_dt < cutoff:
+                        continue
+                except Exception:
+                    pass
+            all_posts.append(p)
+        time.sleep(0.4)
+
+    print(f'[Greenland Rhetoric/Nitter] Total posts: {len(all_posts)}')
+    return all_posts
+
+
 GDELT_QUERIES = [
     # English — U.S. pressure
     ('greenland acquisition trump purchase', 'eng'),
@@ -490,6 +603,14 @@ def _fetch_all_articles(days=5):
                 seen_urls.add(a['url'])
                 all_articles.append(a)
         time.sleep(0.5)
+
+    # Nitter — primary source Twitter/X accounts
+    print(f'[Greenland Rhetoric] Fetching Nitter ({len(NITTER_ACCOUNTS)} accounts)...')
+    nitter_posts = _fetch_all_nitter(days=days)
+    for p in nitter_posts:
+        if p['url'] not in seen_urls:
+            seen_urls.add(p['url'])
+            all_articles.append(p)
 
     print(f'[Greenland Rhetoric] Total articles after dedup: {len(all_articles)}')
     return all_articles
