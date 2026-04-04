@@ -1232,7 +1232,101 @@ def _get_greenland_rhetoric_level():
         return 0, 0
 
 
-def _get_military_posture_level(target):
+def _get_greenland_military_boost():
+    """
+    Arctic-specific military boost for Greenland conflict probability.
+
+    Problem this solves: the NATO theatre alert level runs HIGH/SURGE due to
+    Turkey/Cyprus/Israel posture from the Iran conflict. Reading NATO or even
+    the EUCOM theatre-level bleeds that into Greenland inappropriately.
+
+    Solution: read Denmark and Greenland actor signals directly from Redis,
+    then filter to only count signals that are genuinely Arctic/sovereignty-
+    related (Arktisk Kommando, Pituffik, Danish frigate, Sirius patrol).
+    A Danish frigate deployment to Nuuk = real Greenland signal.
+    Incirlik on alert = not a Greenland signal.
+
+    Returns (posture_label, boost_int) tuple.
+    """
+    ARCTIC_KEYWORDS = [
+        'arktisk', 'arctic', 'greenland', 'grønland', 'pituffik', 'thule',
+        'nuuk', 'sirius', 'danish frigate', 'danish navy', 'danish patrol',
+        'p-8 greenland', 'danish armed forces greenland', 'danish defence',
+        'baffin', 'giuk', 'kola', 'northern fleet', 'svalbard',
+    ]
+
+    try:
+        if not UPSTASH_REDIS_URL or not UPSTASH_REDIS_TOKEN:
+            return 'normal', 0
+
+        resp = requests.get(
+            f'{UPSTASH_REDIS_URL}/get/military_cache',
+            headers={'Authorization': f'Bearer {UPSTASH_REDIS_TOKEN}'},
+            timeout=4
+        )
+        result = resp.json().get('result')
+        if not result:
+            return 'normal', 0
+
+        data = json.loads(result)
+        actors = data.get('actors', {})
+
+        # Only look at Denmark and Greenland actors — never NATO aggregate
+        arctic_actors = ['denmark', 'greenland']
+        arctic_signal_count = 0
+        max_actor_level = 'normal'
+        level_order = ['normal', 'elevated', 'high', 'surge']
+
+        for actor_id in arctic_actors:
+            actor = actors.get(actor_id, {})
+            if not actor:
+                continue
+
+            alert_level = actor.get('alert_level', 'normal')
+            top_signals = actor.get('top_signals', [])
+
+            # Count only signals that contain Arctic-specific keywords
+            for sig in top_signals:
+                sig_text = (
+                    sig.get('article_title', '') + ' ' +
+                    sig.get('hotspot_location', '') + ' ' +
+                    sig.get('query', '')
+                ).lower()
+
+                if any(kw in sig_text for kw in ARCTIC_KEYWORDS):
+                    arctic_signal_count += 1
+
+            # Only elevate if this actor has Arctic-specific signals
+            if arctic_signal_count > 0:
+                if level_order.index(alert_level) > level_order.index(max_actor_level):
+                    max_actor_level = alert_level
+
+        # Apply a dampened boost table for Greenland military —
+        # Danish military activity is sovereignty DEFENSE, not offense.
+        # Cap at +6 (elevated equivalent) unless we have strong Arctic signals.
+        GREENLAND_MIL_BOOST = {
+            'normal':   0,
+            'elevated': 3,   # Dampened vs standard +4
+            'high':     6,   # Dampened vs standard +9
+            'surge':    10,  # Dampened vs standard +15
+        }
+
+        # Further dampen if we have few specific Arctic signals
+        boost = GREENLAND_MIL_BOOST.get(max_actor_level, 0)
+        if arctic_signal_count == 0:
+            boost = 0
+            max_actor_level = 'normal'
+            print(f'[Europe v1.2] Greenland mil: no Arctic-specific signals found — boost suppressed')
+        elif arctic_signal_count < 3 and boost > 3:
+            boost = 3
+            print(f'[Europe v1.2] Greenland mil: only {arctic_signal_count} Arctic signals — boost dampened to +{boost}')
+
+        print(f'[Europe v1.2] Greenland mil: {arctic_signal_count} Arctic signals, actor level {max_actor_level}, boost +{boost}')
+        return max_actor_level, boost
+
+    except Exception as e:
+        print(f'[Europe v1.2] Greenland mil boost error: {str(e)[:80]}')
+        return 'normal', 0
     """
     Read military tracker alert level for a target from Redis.
     Returns alert_level string ('normal','elevated','high','surge').
@@ -1416,12 +1510,10 @@ def calculate_threat_probability(articles, days_analyzed=7, target='ukraine'):
             rhetoric_boost = us_boost
             print(f'[Europe v1.2] Greenland: US pressure L{us_pressure_level} overrides theatre L{rhetoric_level} boost')
 
-        # Military posture — Danish/NATO military activity is the
-        # sovereignty defense signal (Arktisk Kommando surge, frigate deploy)
-        mil_posture = _get_military_posture_level('denmark')
-        if mil_posture == 'normal':
-            mil_posture = _get_military_posture_level('greenland')
-        mil_boost = MILITARY_POSTURE_BOOST_TABLE.get(mil_posture, 0)
+        # Military posture — only count Arctic-specific signals from Denmark/Greenland
+        # actors. Explicitly excludes NATO aggregate to prevent Iran-conflict
+        # theatre elevation (Turkey/Cyprus/Israel) from bleeding into Greenland score.
+        mil_posture, mil_boost = _get_greenland_military_boost()
 
     elif target in ('ukraine', 'russia'):
         # Wire rhetoric boost when Ukraine/Russia trackers go live
