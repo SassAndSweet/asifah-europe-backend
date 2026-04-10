@@ -1205,6 +1205,18 @@ MILITARY_POSTURE_BOOST_TABLE = {
 }
 
 
+def _get_military_posture_level(target):
+    """
+    Placeholder for Russia, Ukraine, Poland military posture boost.
+    Returns ('normal', 0) until dedicated rhetoric trackers are live
+    and writing Redis fingerprints for these targets.
+    Will be replaced with Redis reads matching _get_greenland_military_boost()
+    pattern once rhetoric_tracker_russia.py and rhetoric_tracker_ukraine.py
+    are deployed.
+    """
+    return 'normal', 0
+
+
 def _get_greenland_rhetoric_level():
     """
     Read Greenland rhetoric tracker composite level from Redis.
