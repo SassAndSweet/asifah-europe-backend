@@ -75,6 +75,15 @@ except ImportError:
     RUSSIA_RHETORIC_AVAILABLE = False
     print("[Europe Backend] ⚠️ Russia rhetoric tracker not available")
 
+# Russia stability index
+try:
+    from russia_stability import register_russia_stability_endpoints
+    RUSSIA_STABILITY_AVAILABLE = True
+    print("[Europe Backend] ✅ Russia stability module loaded")
+except ImportError as e:
+    RUSSIA_STABILITY_AVAILABLE = False
+    print(f"[Europe Backend] ⚠️ Russia stability not available: {e}")
+
 app = Flask(__name__)
 # CORS handled by after_request handler
 
@@ -3448,6 +3457,18 @@ def api_europe_travel_advisories():
         print(f"Error in /api/europe/travel-advisories: {e}")
         return jsonify({'success': False, 'error': str(e), 'advisories': {}}), 500
 
+@app.route('/api/europe/articles/russia', methods=['GET'])
+def api_europe_articles_russia():
+    """Recent Russia articles for russia.html article feed."""
+    try:
+        cached = cache_get('threat_russia_7d')
+        if cached:
+            articles = cached.get('articles_en', [])[:20]
+            return jsonify({'success': True, 'articles': articles})
+        return jsonify({'success': False, 'articles': [], 'error': 'No cache yet'})
+    except Exception as e:
+        return jsonify({'success': False, 'articles': [], 'error': str(e)}), 500
+      
 @app.route('/api/europe/cache-status', methods=['GET'])
 def api_cache_status():
     """
@@ -3545,6 +3566,11 @@ if RUSSIA_RHETORIC_AVAILABLE:
     register_russia_rhetoric_endpoints(app)
     start_russia_rhetoric_refresh()
     print("[Europe Backend] ✅ Russia rhetoric routes registered")
+
+# Register Russia stability index
+if RUSSIA_STABILITY_AVAILABLE:
+    register_russia_stability_endpoints(app)
+    print("[Europe Backend] ✅ Russia stability routes registered")
 
 # ========================================
 # START BACKGROUND REFRESH ON BOOT
