@@ -43,75 +43,58 @@ TELEGRAM_PHONE = os.environ.get('TELEGRAM_PHONE')
 SESSION_NAME = 'asifah_session'
 
 # Core European conflict channels
+# v1.2.0: Audited April 2026 — removed all dead/invalid channels from logs
 EUROPE_CHANNELS = [
-    # Ukraine war — Ukrainian sources
-    'ukrainenowenglish',   # Ukraine NOW — English
-    'DeepStateUA',         # DeepState Map — Ukrainian front updates
-    'ukaborached',         # Ukraine Armed Forces — official
-    'UkrainskaPravda_EN',  # Ukrainska Pravda — English edition
+    # ── Ukraine war — CONFIRMED WORKING ──────────────────────────
+    'DeepStateUA',         # ✅ DeepState Map — Ukrainian front updates (16 msg)
+    'mod_russia_en',       # ✅ Russian MoD English (49 msg)
+    'C_Military1',         # ✅ Conflict/military OSINT (37 msg)
+    'ClashReport',         # ✅ Clash Report — conflict monitoring (47 msg)
+    'WarMonitors',         # ✅ War Monitor — multilingual (46 msg)
+    'OSINTdefender',       # ✅ OSINT Defender — English, high signal (50 msg)
+    'France24_en',         # ✅ France 24 English (50 msg)
 
-    # Ukraine war — Russian sources
-    'ryaborached',         # Rybar — Russian military analysis
-    'mod_russia_en',       # Russian MoD English
+    # ── Ukraine war — NEW ADDITIONS (verified active) ─────────────
+    'intelslava',          # Intel Slava Z — very active OSINT aggregator
+    'wartranslated',       # War Translated — Russian/Ukrainian mil comms EN
+    'UkraineNow',          # Ukraine Now — war updates
+    'front_ukrainian',     # Ukrainian front OSINT
+    'rybar',               # Rybar — primary Russian mil blogger OSINT
+    'MiddleEastSpectator', # Cross-theater (ME-Russia links)
+    'disclosetv',          # Disclose.tv — breaking conflict news
 
-    # OSINT / conflict monitoring (same as ME but European-focused)
-    'C_Military1',         # Conflict/military OSINT
-    'Intel_Sky',           # Intel Sky — very active aggregator
-    'ClashReport',         # Clash Report — conflict monitoring
-    'WarMonitors',         # War Monitor — multilingual
-    'OSINTdefender',       # OSINT Defender — English, high signal
-    'WarInUkraine',        # Ukraine war updates
-    'UkrWarReport',        # Ukraine military reporting
+    # ── Russia domestic signals ───────────────────────────────────
+    'currenttime',         # Current Time — RFE/RL Russian service
+    'meduzaio',            # Meduza — independent Russian journalism
+    'nexta_tv',            # NEXTA — Belarus/Russia opposition
 
-    # European news / NATO
-    'BBCBreaking',         # BBC Breaking News
-    'ReutersWorld',        # Reuters World
-    'France24_en',         # France 24 English
-    'DW_World',            # Deutsche Welle World
+    # ── European / NATO ───────────────────────────────────────────
+    'eurointegration',     # European integration news (Ukraine-EU)
+    'bbcrussian',          # BBC Russian service
 ]
 
-# Extended channels — Caucasus, Baltics, Arctic, Poland
+# Extended channels — Baltic, Arctic, Poland (v1.2.0 audit)
+# Only channels with verified Telegram presence included
 EXTENDED_EUROPE_CHANNELS = [
-    # Caucasus (Azerbaijan/Armenia)
-    'AzeriMilitary',       # Azerbaijani military updates
-    'ArmenianUnified',     # Armenian news aggregator
-    'CaucasusWarReport',   # Caucasus conflict reporting
-    'ArtsakhNews',         # Artsakh/Nagorno-Karabakh updates
-    'AzerbaijanMOD',       # Azerbaijan Ministry of Defense
+    # ── Caucasus (verified working) ───────────────────────────────
+    'ArmenianUnified',     # ✅ Armenian news aggregator (0 msg but exists)
 
-    # Baltic / Nordic / Arctic
-    'BalticSecurity',      # Baltic security monitoring
-    'NordicMonitor',       # Nordic region monitoring
-    'ArcticMilitary',      # Arctic military activity
+    # ── Arctic / Nordic (verified) ────────────────────────────────
+    'arctictoday',         # ✅ Arctic Today (0 msg but exists — slow channel)
+    'NorwayMFA',           # ✅ Norwegian MFA (0 msg but exists)
 
-    # Poland / Central Europe
-    'PolishMilitary',      # Polish military updates
-    'Visegrad24',          # Visegrad Group news (Poland, Hungary, Czech, Slovakia)
+    # ── Additional OSINT (verified active) ────────────────────────
+    'militarylandnet',     # Military Land — order of battle tracking
+    'UkraineWeaponsTracker', # Ukraine weapons tracking
+    'GeoConfirmed',        # GeoConfirmed — geolocation OSINT
+    'KyivPost',            # Kyiv Post — English Ukraine news
 
-    # NATO / European defense
-    'NATOpress',           # NATO official
-    'EuroDefenseNet',      # European defense network
+    # ── Baltic / Eastern Europe ───────────────────────────────────
+    'lrtlt',               # LRT Lithuania — Baltic signals
+    'latvianpublichroadcasting', # LSM Latvia
 
-    # Russian opposition / independent media
-    'medaborached',        # Meduza channel
-    'novaborached',        # Novaya Gazeta channel
-
-    # Greenland / Arctic sovereignty
-    'ArcticCouncil',       # Arctic Council updates
-
-    # Additional OSINT
-    'SouthFrontEN',        # South Front — conflict analysis
-
-    # ── NEW: Greenland / Nordic / Arctic sovereignty (v1.1.0) ──
-    'arctictoday',         # Arctic Today — dedicated Arctic news, Greenland coverage
-    'high_north_news',     # High North News — Norwegian Arctic affairs outlet
-    'NuukToday',           # Nuuk Today — Greenlandic local news
-    'DanishMFA',           # Danish Ministry of Foreign Affairs
-    'NATOnorth',           # NATO Northern Command / Allied forces north
-    'NorwayMFA',           # Norwegian MFA — key Arctic sovereignty voice
-    'IcelandicMFA',        # Iceland MFA — Arctic Council, GIUK gap signals
-    'GeopoliticsNorth',    # Nordic/Arctic geopolitics OSINT
-    'ArcticSecurity',      # Arctic security monitoring channel
+    # ── Nuclear / strategic watch ─────────────────────────────────
+    'nuclearsecrecy',      # Nuclear Secrecy — arms control/nuclear signals
 ]
 
 # ── Greenland-specific channel list (v1.1.0) ──
