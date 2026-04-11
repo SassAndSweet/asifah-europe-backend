@@ -83,6 +83,19 @@ from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from flask import jsonify, request
 
+# Telegram signals (optional — graceful fallback if unavailable)
+try:
+    from telegram_signals_europe import fetch_russia_telegram_signals
+    TELEGRAM_AVAILABLE = True
+    print("[Russia Rhetoric] ✅ Telegram signals available")
+except ImportError:
+    TELEGRAM_AVAILABLE = False
+    print("[Russia Rhetoric] ⚠️ Telegram signals not available -- RSS/GDELT only")
+
+# ============================================
+# CONFIG
+# ============================================from flask import jsonify, request
+
 # ============================================
 # CONFIG
 # ============================================
@@ -1083,8 +1096,25 @@ def _fetch_gdelt(query, language='eng', days=3, max_records=25):
 
 
 def _fetch_all_articles():
-    """Fetch from all RSS sources and GDELT."""
+    """Fetch from all RSS sources, Telegram, and GDELT."""
     articles = []
+
+    # Telegram signals (168h window for Russia -- catches slow-moving strategic signals)
+    if TELEGRAM_AVAILABLE:
+        try:
+            tg_messages = fetch_russia_telegram_signals(hours_back=168)
+            for msg in tg_messages:
+                articles.append({
+                    'title':       msg.get('title', ''),
+                    'description': msg.get('title', ''),
+                    'url':         msg.get('url', ''),
+                    'publishedAt': msg.get('published', ''),
+                    'source':      {'name': msg.get('source', 'Telegram')},
+                    'content':     msg.get('title', ''),
+                })
+            print(f"[Russia Rhetoric] Telegram: {len(tg_messages)} messages ingested")
+        except Exception as e:
+            print(f"[Russia Rhetoric] Telegram error: {str(e)[:80]}")
 
     # RSS feeds
     for key, src in RSS_SOURCES.items():
