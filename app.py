@@ -1229,14 +1229,50 @@ MILITARY_POSTURE_BOOST_TABLE = {
 
 def _get_military_posture_level(target):
     """
-    Placeholder for Russia, Ukraine, Poland military posture boost.
-    Returns ('normal', 0) until dedicated rhetoric trackers are live
-    and writing Redis fingerprints for these targets.
-    Will be replaced with Redis reads matching _get_greenland_military_boost()
-    pattern once rhetoric_tracker_russia.py and rhetoric_tracker_ukraine.py
-    are deployed.
+    Placeholder for Ukraine, Poland military posture boost.
+    Russia now has a live rhetoric tracker — use _get_russia_rhetoric_level() instead.
     """
     return 'normal', 0
+
+
+def _get_russia_rhetoric_level():
+    """
+    Read Russia rhetoric tracker levels from Redis.
+    Returns (theatre_level, military_level, nuclear_level) tuple.
+    Falls back to (0, 0, 0) gracefully if unavailable.
+
+    Redis key: rhetoric:russia:latest
+    Written by: rhetoric_tracker_russia.py every 12h
+    """
+    try:
+        if not UPSTASH_REDIS_URL or not UPSTASH_REDIS_TOKEN:
+            return 0, 0, 0
+        resp = requests.get(
+            f'{UPSTASH_REDIS_URL}/get/rhetoric:russia:latest',
+            headers={'Authorization': f'Bearer {UPSTASH_REDIS_TOKEN}'},
+            timeout=4
+        )
+        result = resp.json().get('result')
+        if not result:
+            return 0, 0, 0
+        data = json.loads(result)
+        theatre_level  = data.get('theatre_level', 0)
+        military_level = data.get('russia_military_level', 0)
+        nuclear_level  = data.get('nuclear_level', 0)
+        arctic_level   = data.get('arctic_level', 0)
+        hybrid_level   = data.get('hybrid_level', 0)
+        print(f'[Europe v1.3] Russia rhetoric: theatre L{theatre_level}, '
+              f'mil L{military_level}, nuc L{nuclear_level}, '
+              f'arctic L{arctic_level}, hybrid L{hybrid_level}')
+        # Use the highest signal vector as the driver
+        # Nuclear elevates more aggressively — it's a qualitative escalation
+        effective_level = max(theatre_level, military_level)
+        if nuclear_level >= 3:
+            effective_level = max(effective_level, nuclear_level + 1)
+        return effective_level, military_level, nuclear_level
+    except Exception as e:
+        print(f'[Europe v1.3] Russia rhetoric Redis read error: {str(e)[:80]}')
+        return 0, 0, 0
 
 
 def _get_greenland_rhetoric_level():
@@ -1549,8 +1585,17 @@ def calculate_threat_probability(articles, days_analyzed=7, target='ukraine'):
         # theatre elevation (Turkey/Cyprus/Israel) from bleeding into Greenland score.
         mil_posture, mil_boost = _get_greenland_military_boost()
 
-    elif target in ('ukraine', 'russia'):
-        # Wire rhetoric boost when Ukraine/Russia trackers go live
+    elif target == 'russia':
+        # Russia rhetoric tracker is live — read from Redis directly
+        rhetoric_level, military_level, nuclear_level = _get_russia_rhetoric_level()
+        rhetoric_boost = RHETORIC_BOOST_TABLE.get(rhetoric_level, 0)
+        # Nuclear signaling adds a flat penalty on top — it's qualitatively different
+        if nuclear_level >= 3:
+            rhetoric_boost = min(rhetoric_boost + 5, 20)
+            print(f'[Europe v1.3] Russia nuclear L{nuclear_level} — +5 penalty applied')
+
+    elif target == 'ukraine':
+        # Ukraine tracker not yet live — placeholder
         mil_posture = _get_military_posture_level(target)
         mil_boost   = MILITARY_POSTURE_BOOST_TABLE.get(mil_posture, 0)
 
