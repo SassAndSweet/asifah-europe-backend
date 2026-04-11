@@ -27,6 +27,7 @@ from datetime import datetime, timezone, timedelta
 try:
     from telethon import TelegramClient
     from telethon.tl.functions.messages import GetHistoryRequest
+    from telethon.errors import FloodWaitError, UsernameInvalidError, UsernameNotOccupiedError
     TELETHON_AVAILABLE = True
 except ImportError:
     TELETHON_AVAILABLE = False
@@ -289,6 +290,18 @@ async def _async_fetch_messages(channels, hours_back=24):
 
                 print(f"[Telegram Europe] @{channel}: {channel_count} messages (last {hours_back}h)")
 
+            except FloodWaitError as e:
+                wait = e.seconds
+                print(f"[Telegram Europe] @{channel} flood wait {wait}s — skipping channel")
+                if wait > 300:
+                    # More than 5 min wait -- bail out of entire Telegram session
+                    print(f"[Telegram Europe] ⚠️ Flood wait > 5min — stopping Telegram fetch early")
+                    break
+                await asyncio.sleep(min(wait, 30))
+                continue
+            except (UsernameInvalidError, UsernameNotOccupiedError):
+                print(f"[Telegram Europe] @{channel} — invalid/dead username, skipping")
+                continue
             except Exception as e:
                 print(f"[Telegram Europe] @{channel} error: {str(e)[:100]}")
                 continue
