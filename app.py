@@ -640,7 +640,20 @@ DEESCALATION_KEYWORDS = [
     'restraint', 'diplomatic efforts', 'unlikely to strike',
     'peace summit', 'peace plan', 'peace deal', 'Minsk agreement',
     'withdrawal', 'pullback', 'disengagement', 'humanitarian corridor',
-    'prisoner exchange', 'grain deal', 'diplomatic channel'
+    'prisoner exchange', 'grain deal', 'diplomatic channel',
+    # ── Democratic transition de-escalation signals (Hungary v1.0.0) ──
+    'democratic transition', 'peaceful transfer', 'concedes peacefully',
+    'congratulates winner', 'accepts result', 'accepts defeat',
+    'eu welcomes', 'eu congratulates', 'brussels welcomes',
+    'von der leyen congratulates', 'nato welcomes',
+    'transition of power', 'handover of power', 'peaceful election',
+    'free and fair', 'democratic mandate', 'historic mandate',
+    'voters chose', 'democracy prevails', 'democracy wins',
+    'reconciliation', 'unity government', 'national unity',
+    'eu funds unlocked', 'frozen funds released', 'sanctions lifted',
+    'rule of law restored', 'judicial independence',
+    'rejoins european', 'rejoins eu', 'eu reintegration',
+    'nato reintegration', 'pro-european victory',
 ]
 
 # ========================================
