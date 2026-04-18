@@ -135,26 +135,25 @@ GREENLAND_CHANNELS = [
 # No official Tisza Telegram exists. Signals captured via European OSINT
 # and Hungarian independent media channels.
 HUNGARY_CHANNELS = [
-    # ── European OSINT / EU politics ─────────────────────────────
-    'eurointegration',      # European integration — EU institutional signals
-    'euractiv',             # Euractiv — EU politics, Hungary coverage
-    'EUvsDisinfo',          # EU vs Disinfo — Russian interference in HU election
-    'nexta_tv',             # NEXTA — covers Eastern European democratic movements
-    # ── Independent Hungarian media (English/Hungarian) ───────────
-    '444hu',                # 444.hu — Hungary's main independent news outlet
+    # ── Verified working, Hungary-relevant, non-war-heavy ──
+    # v1.1.0 cleanup (April 2026): removed 6 dead channels
+    # (eurointegration, euractiv, 444hu, hvg_hu, politico_eu, meduzaio)
+    # and 4 war-heavy channels (intelslava, mod_russia_en,
+    # OSINTdefender, WarMonitors) that were inflating Hungary score
+    # with Ukraine-war content leakage (92% false positive).
+
+    # ── EU-level political monitoring ──
+    'EUvsDisinfo',          # EU vs Disinfo — Russian interference signals
+    'France24_en',          # France 24 — EU institutional coverage
+
+    # ── Eastern European democratic movements ──
+    'nexta_tv',             # NEXTA — Eastern European democratic movements
+
+    # ── Independent Hungarian media ──
     'telex_hu',             # Telex — leading independent Hungarian media
-    'hvg_hu',               # HVG — Hungarian independent weekly
-    # ── European political monitoring ────────────────────────────
-    'politico_eu',          # Politico Europe — EU/Hungary transition coverage
-    'France24_en',          # France 24 — covers EU institutional stories
-    'bbcrussian',           # BBC Russian — covers Eastern European transitions
-    # ── Russian reaction signals ──────────────────────────────────
-    'meduzaio',             # Meduza — Russian reaction to losing EU ally
-    'intelslava',           # Intel Slava — Russian commentary on Hungary
-    'mod_russia_en',        # Russian MoD — will react to Hungary NATO/Ukraine shift
-    # ── Regional (Slovakia tensions, ethnic HU minority) ──────────
-    'OSINTdefender',        # High-signal OSINT — catches regional spillover
-    'WarMonitors',          # War Monitor — regional Eastern Europe signals
+
+    # ── Russian-language European coverage ──
+    'bbcrussian',           # BBC Russian — Eastern European transitions
 ]
 
 # ── Russia-specific channel list (v1.2.0) ──
