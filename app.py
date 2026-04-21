@@ -84,6 +84,18 @@ except ImportError as e:
     RUSSIA_STABILITY_AVAILABLE = False
     print(f"[Europe Backend] ⚠️ Russia stability not available: {e}")
 
+# Weather bundle (replaces 9 frontend open-meteo calls with 1 cached backend call)
+try:
+    from europe_weather_bundle import (
+        register_weather_endpoints,
+        start_weather_refresh,
+    )
+    WEATHER_BUNDLE_AVAILABLE = True
+    print("[Europe Backend] ✅ Weather bundle module loaded")
+except ImportError as e:
+    WEATHER_BUNDLE_AVAILABLE = False
+    print(f"[Europe Backend] ⚠️ Weather bundle not available: {e}")
+
 app = Flask(__name__)
 # CORS handled by after_request handler
 
@@ -3569,6 +3581,12 @@ if RUSSIA_RHETORIC_AVAILABLE:
 if RUSSIA_STABILITY_AVAILABLE:
     register_russia_stability_endpoints(app)
     print("[Europe Backend] ✅ Russia stability routes registered")
+
+# Register Weather bundle endpoint + start background refresh
+if WEATHER_BUNDLE_AVAILABLE:
+    register_weather_endpoints(app)
+    start_weather_refresh()
+    print("[Europe Backend] ✅ Weather bundle routes registered + refresh started")
 
 # ========================================
 # MILITARY POSTURE PROXY (v1.0.0 — April 2026)
