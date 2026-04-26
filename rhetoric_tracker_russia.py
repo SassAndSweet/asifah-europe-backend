@@ -1543,6 +1543,15 @@ def run_russia_rhetoric_scan(force=False):
         except Exception as ie:
             print(f"[Russia Rhetoric] Interpreter error: {str(ie)[:80]}")
 
+        # v2.0: Build top_signals[] for BLUF/GPI consumption
+        try:
+            from russia_signal_interpreter import build_top_signals
+            result['top_signals'] = build_top_signals(result)
+            print(f"[Russia Rhetoric] top_signals: {len(result['top_signals'])} emitted")
+        except Exception as e:
+            print(f"[Russia Rhetoric] build_top_signals error: {str(e)[:120]}")
+            result['top_signals'] = []
+
         # Write to Redis
         _redis_set(RHETORIC_CACHE_KEY, result)
         _redis_lpush_trim(HISTORY_KEY, {
