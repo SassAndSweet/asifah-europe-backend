@@ -1197,3 +1197,293 @@ if __name__ == '__main__':
         print(f'  {hm["similarity"]}% -- {hm["label"]} | Confidence: {hm["confidence"]}')
     print(f'\nDIPLOMATIC TRACK: score={result["diplomatic_track"]["score"]}, '
           f'max_pressure={result["diplomatic_track"]["maximum_pressure"]}')
+
+
+# ============================================================
+# v2.0+ — TOP SIGNALS (BLUF / GPI consumable)
+# ============================================================
+# Builds canonical top_signals[] for Europe Regional BLUF + GPI.
+# Russia is the richest tracker in the platform: 5 vectors (nuclear, ground_ops,
+# nato_flank, arctic, hybrid) plus red_lines, green_lines, diplomatic_track.
+
+RUSSIA_FLAG = '\U0001f1f7\U0001f1fa'  # 🇷🇺
+
+def build_top_signals(scan_data):
+    """
+    Build Russia's top_signals[] for BLUF/GPI consumption.
+    Reads from scan_data dict (post-interpret_signals output).
+    Russia uses ME-pattern: result['interpretation'] wraps so_what / red_lines / green_lines.
+    Returns sorted list (descending priority).
+    """
+    signals = []
+
+    # Russia stores interpreter output under 'interpretation' wrapper
+    interp = scan_data.get('interpretation', {}) or {}
+    so_what     = interp.get('so_what', {}) or {}
+    red_lines   = interp.get('red_lines', {}) or {}
+    green_lines = interp.get('green_lines', {}) or {}
+    diplomatic  = interp.get('diplomatic_track', {}) or {}
+
+    # Theatre-level fields at top of scan_data
+    theatre_level = scan_data.get('theatre_level', 0) or 0
+    theatre_score = scan_data.get('theatre_score', 0) or 0
+
+    # Vector levels
+    nuclear   = scan_data.get('nuclear_level', 0) or 0
+    ground    = scan_data.get('ground_ops_level', 0) or 0
+    nato_flank = scan_data.get('nato_flank_level', 0) or 0
+    arctic    = scan_data.get('arctic_level', 0) or 0
+    hybrid    = scan_data.get('hybrid_level', 0) or 0
+
+    # Red/green line triggered lists
+    rl_triggered = red_lines.get('triggered', []) or []
+    breached = [r for r in rl_triggered if isinstance(r, dict) and r.get('status') == 'BREACHED']
+    approaching = [r for r in rl_triggered if isinstance(r, dict) and r.get('status') == 'APPROACHING']
+    gl_triggered = green_lines.get('triggered', []) or []
+    active_gl = [g for g in gl_triggered if isinstance(g, dict) and g.get('status') == 'ACTIVE']
+
+    # ============================================
+    # 1. RED LINES BREACHED (highest priority)
+    # ============================================
+    for rl in breached[:3]:
+        label    = rl.get('label', 'Red line')
+        severity = rl.get('severity', 5) or 5
+        signals.append({
+            'priority':   12,
+            'category':   'red_line_breached',
+            'theatre':    'russia',
+            'level':      max(theatre_level, 4),
+            'icon':       rl.get('icon', '🚨'),
+            'color':      '#dc2626',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: BREACH — {label[:55]}',
+            'long_text':  f'RUSSIA red line breached (severity {severity}): {label}',
+        })
+
+    for rl in approaching[:2]:
+        label = rl.get('label', 'Red line')
+        signals.append({
+            'priority':   8,
+            'category':   'red_line_approaching',
+            'theatre':    'russia',
+            'level':      theatre_level,
+            'icon':       '🟠',
+            'color':      '#f97316',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Approaching — {label[:50]}',
+            'long_text':  f'RUSSIA approaching red line: {label}',
+        })
+
+    # ============================================
+    # 2. THEATRE-HIGH (overall L4+)
+    # ============================================
+    if theatre_level >= 4:
+        signals.append({
+            'priority':   9 + theatre_level,
+            'category':   'theatre_high',
+            'theatre':    'russia',
+            'level':      theatre_level,
+            'icon':       '🔴',
+            'color':      '#dc2626' if theatre_level >= 5 else '#ef4444',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA L{theatre_level} — Composite pressure',
+            'long_text':  f'RUSSIA at L{theatre_level} composite pressure (score {theatre_score}/100). '
+                          f'Multi-vector activity: nuclear L{nuclear}, ground L{ground}, NATO L{nato_flank}, arctic L{arctic}.',
+        })
+
+    # ============================================
+    # 3. NUCLEAR SIGNALING (Russia-specific KEY signal)
+    # ============================================
+    nuclear_elevated = so_what.get('nuclear_elevated', False)
+    if nuclear >= 4:
+        signals.append({
+            'priority':   13,
+            'category':   'nuclear_signaling',
+            'theatre':    'russia',
+            'level':      nuclear,
+            'icon':       '☢️',
+            'color':      '#dc2626',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Nuclear signaling L{nuclear}',
+            'long_text':  f'RUSSIA nuclear coercion vector L{nuclear} — explicit nuclear language detected, '
+                          f'doctrinal threshold approached. Highest-stakes signal in Europe theater.',
+        })
+    elif nuclear >= 3 or nuclear_elevated:
+        signals.append({
+            'priority':   10,
+            'category':   'nuclear_signaling',
+            'theatre':    'russia',
+            'level':      nuclear,
+            'icon':       '☢️',
+            'color':      '#ef4444',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Nuclear signaling L{nuclear}',
+            'long_text':  f'RUSSIA nuclear signaling L{nuclear} — coercion threshold elevated, watch for doctrine shifts.',
+        })
+
+    # ============================================
+    # 4. GROUND OPERATIONS (Ukraine front)
+    # ============================================
+    if ground >= 4:
+        signals.append({
+            'priority':   10,
+            'category':   'ground_operations',
+            'theatre':    'russia',
+            'level':      ground,
+            'icon':       '⚔️',
+            'color':      '#dc2626',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Ground ops L{ground}',
+            'long_text':  f'RUSSIA ground operations L{ground} — major Ukrainian-front activity, '
+                          f'kinetic tempo at incident-or-above level.',
+        })
+
+    # ============================================
+    # 5. NATO FLANK (Baltic/Suwalki/Kaliningrad)
+    # ============================================
+    if nato_flank >= 4:
+        signals.append({
+            'priority':   10,
+            'category':   'nato_flank',
+            'theatre':    'russia',
+            'level':      nato_flank,
+            'icon':       '🛡️',
+            'color':      '#dc2626',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: NATO flank pressure L{nato_flank}',
+            'long_text':  f'RUSSIA NATO-flank pressure L{nato_flank} — Suwalki Gap, Baltic, '
+                          f'or Kaliningrad signals at incident threshold.',
+        })
+    elif nato_flank >= 3:
+        signals.append({
+            'priority':   7,
+            'category':   'nato_flank',
+            'theatre':    'russia',
+            'level':      nato_flank,
+            'icon':       '🛡️',
+            'color':      '#f97316',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: NATO flank L{nato_flank}',
+            'long_text':  f'RUSSIA NATO-flank signaling L{nato_flank} — Baltic states warrant elevated monitoring.',
+        })
+
+    # ============================================
+    # 6. ARCTIC POSTURING (cross-Arctic with Greenland)
+    # ============================================
+    arctic_elevated = so_what.get('arctic_elevated', False)
+    if arctic >= 4:
+        signals.append({
+            'priority':   9,
+            'category':   'arctic_posture',
+            'theatre':    'russia',
+            'level':      arctic,
+            'icon':       '🧊',
+            'color':      '#0ea5e9',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Arctic posture L{arctic}',
+            'long_text':  f'RUSSIA Arctic militarization L{arctic} — Northern Fleet, NSR claims, '
+                          f'or icebreaker movements at incident level.',
+        })
+    elif arctic >= 3 or arctic_elevated:
+        signals.append({
+            'priority':   6,
+            'category':   'arctic_posture',
+            'theatre':    'russia',
+            'level':      arctic,
+            'icon':       '🧊',
+            'color':      '#0ea5e9',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Arctic L{arctic}',
+            'long_text':  f'RUSSIA Arctic activity L{arctic} — Northern Fleet posture elevated.',
+        })
+
+    # ============================================
+    # 7. HYBRID OPERATIONS (sabotage, cyber, GPS jamming)
+    # ============================================
+    if hybrid >= 4:
+        signals.append({
+            'priority':   8,
+            'category':   'hybrid_ops',
+            'theatre':    'russia',
+            'level':      hybrid,
+            'icon':       '🕵️',
+            'color':      '#a855f7',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Hybrid ops L{hybrid}',
+            'long_text':  f'RUSSIA hybrid activity L{hybrid} — sabotage, GPS jamming, '
+                          f'sub-cable interference, or cyber incidents at incident level.',
+        })
+
+    # ============================================
+    # 8. MAXIMUM PRESSURE FLAG (multi-vector convergence)
+    # ============================================
+    maximum_pressure = so_what.get('maximum_pressure', False)
+    high_vector_count = so_what.get('high_vector_count', 0) or 0
+    if maximum_pressure:
+        signals.append({
+            'priority':   11,
+            'category':   'maximum_pressure',
+            'theatre':    'russia',
+            'level':      max(theatre_level, 4),
+            'icon':       '🌀',
+            'color':      '#dc2626',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Maximum pressure ({high_vector_count} vectors L3+)',
+            'long_text':  f'RUSSIA multi-vector convergence — {high_vector_count} of 5 vectors at L3+ '
+                          f'simultaneously; coordinated coercion campaign, classic max-pressure signaling.',
+        })
+
+    # ============================================
+    # 9. GREEN LINES ACTIVE (de-escalation signals)
+    # ============================================
+    for gl in active_gl[:2]:
+        label = gl.get('label', 'De-escalation signal')
+        signals.append({
+            'priority':   6,
+            'category':   'green_line_active',
+            'theatre':    'russia',
+            'level':      max(0, theatre_level - 1),
+            'icon':       '🟢',
+            'color':      '#22c55e',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: De-escalation — {label[:50]}',
+            'long_text':  f'RUSSIA de-escalation signal active: {label}. Diplomatic / off-ramp tempo elevated.',
+        })
+
+    # ============================================
+    # 10. DIPLOMATIC TRACK
+    # ============================================
+    diplomatic_score = so_what.get('diplomatic_score', 0) or 0
+    diplomatic_scenario = so_what.get('diplomatic_scenario', '') or ''
+    if diplomatic_score >= 60:
+        signals.append({
+            'priority':   7,
+            'category':   'diplomatic_active',
+            'theatre':    'russia',
+            'level':      max(0, theatre_level - 1),
+            'icon':       '🕊️',
+            'color':      '#22c55e',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Diplomatic track {diplomatic_score}',
+            'long_text':  f'RUSSIA diplomatic track score {diplomatic_score} — {diplomatic_scenario}. '
+                          f'Potential off-ramp window.',
+        })
+
+    # ============================================
+    # 11. CROSS-THEATER FINGERPRINT FLAGS
+    # ============================================
+    # Russia tracker writes cross-theater fingerprints (iran_russia_active,
+    # dprk_russia_active, etc.); these are cross-theater tells but not always
+    # surfaced in interpretation. Pull from scan_data root if present.
+    if scan_data.get('iran_russia_active'):
+        signals.append({
+            'priority':   7,
+            'category':   'crosstheater_iran_russia',
+            'theatre':    'russia',
+            'level':      3,
+            'icon':       '🤝',
+            'color':      '#7c3aed',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: Iran-Russia coordination active',
+            'long_text':  'RUSSIA-IRAN axis active — Shahed transfers, weapons cooperation, or coordinated diplomatic posture.',
+        })
+    if scan_data.get('dprk_russia_active'):
+        signals.append({
+            'priority':   7,
+            'category':   'crosstheater_dprk_russia',
+            'theatre':    'russia',
+            'level':      3,
+            'icon':       '🤝',
+            'color':      '#7c3aed',
+            'short_text': f'{RUSSIA_FLAG} RUSSIA: DPRK-Russia coordination active',
+            'long_text':  'RUSSIA-DPRK axis active — North Korean ammunition / troops / weapons transfers documented.',
+        })
+
+    # Sort descending; BLUF will dedupe + globally rank
+    signals.sort(key=lambda s: s['priority'], reverse=True)
+    return signals
