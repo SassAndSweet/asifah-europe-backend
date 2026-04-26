@@ -840,6 +840,16 @@ def run_greenland_rhetoric_scan(days=5):
         except Exception as ie:
             print(f'[Greenland Rhetoric] Interpreter error: {str(ie)[:100]}')
 
+    # v2.0: Build top_signals[] for BLUF/GPI consumption
+    if INTERPRETER_AVAILABLE:
+        try:
+            from greenland_signal_interpreter import build_top_signals
+            result['top_signals'] = build_top_signals(result)
+            print(f'[Greenland Rhetoric] top_signals: {len(result["top_signals"])} emitted')
+        except Exception as e:
+            print(f'[Greenland Rhetoric] build_top_signals error: {str(e)[:120]}')
+            result['top_signals'] = []
+
     print(f'[Greenland Rhetoric] Scan complete in {elapsed}s | Theatre L{composite["theatre_level"]} ({composite["theatre_score"]}/100) | {composite["convergence_signal"] or "No convergence signal"}')
     return result
 
