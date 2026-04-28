@@ -547,15 +547,19 @@ ACTORS = {
         'flag': '🇮🇷',
         'icon': '🚀',
         'color': '#dc2626',
-        'role': 'External Support to Iran — Launch / Arms / Coordination',
+        'role': 'External Support to Iran — Launch / Arms / Coordination / Mediation',
         'description': (
             'Russia as active supporter of Iran. '
             'Sub-categorized across: launch partnership (Russian rockets '
             'carrying Iranian satellites), arms transfers, intelligence '
             'sharing (incl. satellite targeting data for IRGC strikes on '
-            'US installations), and strategic coordination. '
+            'US installations), strategic coordination, and diplomatic / '
+            'mediation cover (top-level meetings, UN Security Council '
+            'vetoes, mediation channel substitution when other tracks stall). '
             'Watch for: Russian targeting-data allegations, joint defense '
-            'announcements, Iranian satellite launches via Soyuz.'
+            'announcements, Iranian satellite launches via Soyuz, '
+            'Putin-Araghchi-level coordination, UN Hormuz vetoes, '
+            'uranium handover offers (JCPOA pattern).'
         ),
         'keywords': [
             # Launch partnership / space
@@ -566,18 +570,63 @@ ACTORS = {
             'russia satellite iran', 'russia targeting iran',
             'russia intelligence iran', 'russia iran targeting us',
             'russian targeting data iran', 'russia satellite irgc',
+            'russia satellite imagery iran', 'satellite imagery warship iran',
+            'russia warship locations iran',
             # Arms / hardware
             'russia arms iran', 'russia weapons iran',
             'russia supplies iran', 'russian s-400 iran',
             'russian jets iran', 'sukhoi iran', 'russia air defense iran',
+            'advanced drones russia iran', 'shahed russia iran',
+            'russia drone delivery iran',
             # Strategic coordination
             'moscow tehran military', 'russia iran defense pact',
             'russia backs iran war', 'russia iran cooperation war',
             'comprehensive partnership iran russia',
             'russia iran military coordination',
+            # ── v2.1 — TOP-LEVEL DIPLOMATIC COORDINATION (Apr 2026) ──
+            # Single-word + short-phrase triggers that match real article text.
+            'araghchi',
+            'mojtaba khamenei',
+            'mojtaba',
+            'iran foreign minister',
+            'iranian foreign minister',
+            'iran fm',
+            'foreign minister moscow',
+            'foreign minister putin',
+            'foreign minister russia',
+            'received iran message', 'message from mojtaba',
+            'message from khamenei', 'received a message',
+            # ── v2.1 — UN / DIPLOMATIC COVER ──
+            'russia veto', 'russia vetoes', 'russia vetoed',
+            'hormuz resolution', 'hormuz veto',
+            'vetoing a resolution', 'diplomatic cover for iran',
+            'russia un cover', 'russia security council iran',
+            # ── v2.1 — URANIUM / NUCLEAR HANDOVER ──
+            'take iranian uranium', 'take that uranium',
+            'iranian uranium', 'uranium russia',
+            'kremlin uranium', 'iranian stockpile',
+            'enriched uranium russia', 'readiness to take',
+            # ── v2.1 — CASPIAN TRADE WORKAROUND ──
+            'caspian sea', 'caspian trade', 'caspian shipping',
+            'caspian transit', 'via the caspian',
+            # ── v2.1 — MEDIATION SUBSTITUTION ──
+            'moscow mediation', 'putin mediates',
+            'russia mediation', 'russia broker',
+            'phased approach hormuz', 'reopening the strait of hormuz',
+            'phased hormuz', 'mediation channel',
+            'witkoff', 'kushner pakistan',
+            'called off the trip', 'cancelled the trip',
+            'trump abruptly called', 'trump cancels iran',
+            'pakistan and oman', 'pakistan talks',
+            # ── v2.1 — INTELLIGENCE / WEAPONS SUPPLY (specific) ──
+            'satellite imagery showing', 'warships and military',
+            'advanced drones to iran', 'deliver advanced drones',
+            'shahed flow', 'uranium and shahed',
             # Cross-language
             'روسيا تدعم إيران', 'روسیه ایران حمایت',
             'پرتاب ماهواره ایرانی روسیه',
+            'عراقچی', 'مجتبی خامنه‌ای',
+            'وتو روسيا',
         ],
         'baseline_statements_per_week': 3,
         'tripwires': [
@@ -585,6 +634,12 @@ ACTORS = {
             'russia provides targeting data iran strike',
             'russia delivers s-400 iran',
             'russia iran defense pact signed',
+            # v2.1 — diplomatic / nuclear tripwires
+            'putin araghchi summit',
+            'mojtaba khamenei direct message putin',
+            'russia veto un hormuz resolution',
+            'russia accepts iranian uranium handover',
+            'russia signs iran drone supply',
         ],
     },
 }
@@ -920,6 +975,21 @@ RSS_SOURCES = {
         'url': 'https://www.euractiv.com/feed/',
         'name': 'Euractiv',
         'weight': 0.8,
+    },
+    # ── v2.1 — Targeted Iran-Russia diplomatic coordination ──
+    # Catches NYT/Reuters analytical framing on top-level meetings,
+    # mediation substitution, UN cover, uranium handover.
+    'gnews_russia_iran_diplomatic': {
+        'url': 'https://news.google.com/rss/search?q=Putin+Araghchi+OR+%22Russia+Iran%22+mediation+OR+%22Iran+foreign+minister%22+Moscow+2026&hl=en&gl=US&ceid=US:en',
+        'name': 'Google News — Russia-Iran diplomatic',
+        'weight': 1.0,
+        'note': 'Top-level coordination, UN vetoes, mediation channel substitution',
+    },
+    'gnews_russia_iran_uranium': {
+        'url': 'https://news.google.com/rss/search?q=Russia+uranium+Iran+OR+%22Hormuz+veto%22+OR+%22Caspian%22+Iran+2026&hl=en&gl=US&ceid=US:en',
+        'name': 'Google News — Russia-Iran uranium/Hormuz',
+        'weight': 0.95,
+        'note': 'Material support and diplomatic cover signals',
     },
 }
 
