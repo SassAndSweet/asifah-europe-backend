@@ -186,6 +186,81 @@ RUSSIA_CHANNELS = [
     'MiddleEastSpectator', # ME-Russia axis signals
 ]
 
+# ── Belarus-specific channel list (v1.0.0 — Apr 29 2026) ──
+# Used by Belarus stability scoring in app.py.
+# Focused curation to avoid Ukraine-war content bleeding into Belarus
+# score (same lesson learned with Hungary).
+#
+# Key signals to capture:
+#   - Lukashenko / Khrenin defense statements (BelTA, pul_1, Belarus MFA)
+#   - Tikhanovskaya opposition in exile (NEXTA primary)
+#   - Russian deployment / Wagner remnants in Belarus
+#   - NATO border tensions (Suwałki Gap, Poland/Lithuania border)
+#   - Iran-Belarus cooperation (Apr 27 2026 IR-RU-BY trilateral)
+#   - Migrant weaponization at Polish/Lithuanian border
+BELARUS_CHANNELS = [
+    # ── Belarusian opposition (exile media) ───────────────────────
+    'nexta_tv',                # ✅ NEXTA — primary Belarusian opposition (live since 2020)
+    'belamova',                # Belarus opposition tracker
+    'sviatlanaTSlive',         # Tikhanovskaya official — opposition leader in exile
+    # ── Belarusian state / pro-regime (for what regime is saying) ──
+    'pul_1',                   # "Пул Первого" — Lukashenko's office press pool
+    'BELTA_news',              # BelTA — Belarus state news agency
+    # ── Russian-language Eastern Europe coverage ──────────────────
+    'meduzaio',                # Meduza — independent Russian journalism
+    'currenttime',             # Current Time — RFE/RL Russian service
+    'bbcrussian',              # BBC Russian — Eastern European transitions
+    # ── EU institutional monitoring ───────────────────────────────
+    'EUvsDisinfo',             # EU vs Disinfo — Russian/Belarusian interference
+    # ── Cross-theater (Belarus-Iran-Russia axis) ──────────────────
+    'MiddleEastSpectator',     # ME-Russia-Iran axis signals (post-Apr 27 trilateral)
+    # ── NATO frontline coverage ───────────────────────────────────
+    'NorwayMFA',               # Norwegian MFA — broader NATO flank perspective
+    # ── OSINT (general — kept light to avoid Ukraine-war bleed) ───
+    'OSINTdefender',           # OSINT Defender — broad coverage incl. Belarus deployments
+]
+
+def fetch_belarus_telegram_signals(hours_back=120):
+    """
+    Fetch Telegram signals for Belarus stability tracker.
+    Uses 120h (5 day) window — Belarus signal moves on multi-day rhythm
+    (Lukashenko statements, defense ministry comms, opposition reports).
+
+    Key signals to watch:
+      - Khrenin (Defense Minister) statements re: Iran/Russia cooperation
+      - Lukashenko health / succession rumors
+      - Russian troop movements / Wagner deployments in Belarus
+      - Tikhanovskaya statements on political prisoners
+      - Suwałki Gap / NATO border activity
+      - Migrant weaponization at Polish/Lithuanian border
+      - Iran-Belarus follow-up after April 27 SCO trilateral
+
+    Context (April 27, 2026):
+      Belarus Defense Minister Khrenin met with Iran Deputy DM Talaei-Nik;
+      Belarus' Defence Ministry stated 'mutual interest of Minsk and Tehran
+      for further deepening of joint interaction'.
+    """
+    if not _telegram_available():
+        print("[Telegram Belarus] Signals unavailable — skipping")
+        return []
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                future = pool.submit(asyncio.run, _async_fetch_messages(BELARUS_CHANNELS, hours_back))
+                return future.result(timeout=120)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(_async_fetch_messages(BELARUS_CHANNELS, hours_back))
+            finally:
+                loop.close()
+    except Exception as e:
+        print(f"[Telegram Belarus] ❌ fetch error: {str(e)[:200]}")
+        return []
+
 def fetch_hungary_telegram_signals(hours_back=120):
     """
     Fetch Telegram signals for Hungary stability tracker.

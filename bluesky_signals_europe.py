@@ -65,37 +65,44 @@ BLUESKY_ACCOUNTS_EUROPE = [
 
     # ── US government — govmirrors (X-sourced) ─────────────────
     # Use mirrors ONLY if native Bluesky account does not exist.
-    ('potus.govmirrors.com',          1.0, ['greenland', 'ukraine', 'russia', 'poland', 'hungary'],
+    ('potus.govmirrors.com',          1.0, ['greenland', 'ukraine', 'russia', 'poland', 'hungary', 'belarus'],
         'POTUS (X mirror) — White House executive statements'),
     ('statedept.govmirrors.com',      0.9, ['*'],
         'StateDept (X mirror) — redundant with native, kept as backup'),
 
     # ── NATO / EU institutions — native Bluesky ────────────────
     ('natohq.bsky.social',            1.0, ['*'],
-        'NATO (official) — alliance posture, deployments, Article 5'),
+        'NATO (official) — alliance posture, deployments, Article 5; covers Belarus border'),
 
     # ── Ukraine — native Bluesky ───────────────────────────────
-    ('zelenskyyua.bsky.social',       1.2, ['ukraine', 'russia'],
-        'President Zelensky (if native) — direct statements'),
-    ('mfa.gov.ua',                    1.1, ['ukraine', 'russia'],
-        'Ukraine MFA (custom domain) — diplomatic signals'),
+    ('zelenskyyua.bsky.social',       1.2, ['ukraine', 'russia', 'belarus'],
+        'President Zelensky (if native) — direct statements; Belarus relevant for second-front concerns'),
+    ('mfa.gov.ua',                    1.1, ['ukraine', 'russia', 'belarus'],
+        'Ukraine MFA (custom domain) — diplomatic signals; Belarus deployment monitoring'),
 
     # ── European institutions — where available ────────────────
     # Many European institutional accounts are on Mastodon/EU Voice rather
     # than Bluesky. Keep this list minimal and verified; add handles as
     # they're confirmed live. Unknown handles will 404 harmlessly.
-    ('euvsdisinfo.bsky.social',       0.9, ['russia', 'ukraine', 'hungary'],
-        'EU vs Disinfo — Russian disinformation monitoring'),
+    ('euvsdisinfo.bsky.social',       0.9, ['russia', 'ukraine', 'hungary', 'belarus'],
+        'EU vs Disinfo — Russian/Belarusian disinformation monitoring'),
+
+    # ── Belarus opposition — native Bluesky (v1.0.0 Apr 29 2026) ──
+    # Tikhanovskaya's office is the primary international voice of the
+    # Belarusian democratic movement. Handle is unverified — if it 404s,
+    # remove with no impact (graceful degradation pattern).
+    ('tsikhanouskaya.bsky.social',    1.1, ['belarus', 'russia'],
+        'Sviatlana Tsikhanouskaya (if native) — Belarusian opposition leader in exile'),
 
     # ── govmirrors fallbacks for X-only accounts ──────────────
-    ('realdonaldtrump.govmirrors.com', 1.2, ['greenland', 'ukraine', 'russia', 'poland', 'hungary'],
-        'Trump (X mirror) — Greenland/Ukraine/NATO statements'),
-    ('secrubio.govmirrors.com',        1.1, ['greenland', 'ukraine', 'russia', 'poland'],
-        'US SecState Rubio (X mirror) — Europe/Arctic policy'),
-    ('modrussia.govmirrors.com',       1.1, ['russia', 'ukraine'],
-        'Russian MoD (X mirror) — official claims/posture'),
-    ('mfarussia.govmirrors.com',       1.0, ['russia', 'ukraine'],
-        'Russian MFA (X mirror) — diplomatic signaling'),
+    ('realdonaldtrump.govmirrors.com', 1.2, ['greenland', 'ukraine', 'russia', 'poland', 'hungary', 'belarus'],
+        'Trump (X mirror) — Greenland/Ukraine/NATO/Belarus statements'),
+    ('secrubio.govmirrors.com',        1.1, ['greenland', 'ukraine', 'russia', 'poland', 'belarus'],
+        'US SecState Rubio (X mirror) — Europe/Arctic/Belarus policy'),
+    ('modrussia.govmirrors.com',       1.1, ['russia', 'ukraine', 'belarus'],
+        'Russian MoD (X mirror) — official claims; Belarus deployment relevant'),
+    ('mfarussia.govmirrors.com',       1.0, ['russia', 'ukraine', 'belarus'],
+        'Russian MFA (X mirror) — diplomatic signaling; Union State commentary'),
 ]
 
 

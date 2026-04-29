@@ -463,6 +463,7 @@ TRAVEL_ADVISORY_CODES = {
     'azerbaijan': ['AJ'],
     'armenia': ['AM'],
     'hungary': ['HU'],
+    'belarus': ['BO'],   # State Dept code for Belarus is 'BO'
 }
 
 TRAVEL_ADVISORY_LEVELS = {
@@ -722,6 +723,10 @@ TARGET_BASELINES = {
     'hungary': {
         'base_adjustment': +4,
         'description': 'Democratic transition — Magyar/Tisza won April 2026 supermajority. Pressure signals: Fidesz opposition reaction, Russian interference, EU re-integration, rule of law reform, constitutional overhaul risk'
+    },
+    'belarus': {
+        'base_adjustment': +9,
+        'description': 'Russian client state hosting Russian nuclear weapons; Suwałki Gap NATO proximity; Iran defense cooperation activated April 2026 (IR-RU-BY trilateral); Lukashenko succession question; Tikhanovskaya opposition in exile; Wagner remnants; Ukraine border militarization'
     }
 }
 
@@ -960,6 +965,60 @@ TARGET_KEYWORDS = {
             'Fidesz', 'Hungarian election', 'Hungary EU', 'Hungary democracy',
             'Hungary Russia', 'Hungarian politics'
         ]
+    },
+    'belarus': {
+        'keywords': [
+            # ── Country & leadership ────────────────────────────────────
+            'belarus', 'belarusian', 'belorussian', 'minsk',
+            'lukashenko', 'aleksandr lukashenko', 'alexander lukashenko',
+            'belarus president', 'lukashenka',
+            # ── Russian-language transliterations + cognates ─────────────
+            'беларусь', 'белоруссия', 'минск', 'лукашенко',
+            'белорусский', 'беларуси',
+            # ── Opposition & 2020 crisis ─────────────────────────────────
+            'tikhanovskaya', 'tsikhanouskaya', 'sviatlana tsikhanouskaya',
+            'belarus opposition', 'belarusian opposition', 'protasevich',
+            'belarus protests', '2020 belarus', 'belarus elections',
+            'belarus political prisoners', 'kalinouski regiment',
+            'viasna', 'bialiatski', 'ales bialiatski',
+            # ── Russia client state / Union State ────────────────────────
+            'russia belarus', 'belarus russia', 'union state belarus',
+            'belarus russian troops', 'belarus russian military',
+            'belarus kremlin', 'putin lukashenko', 'cstO belarus',
+            # ── Nuclear sharing / strategic ──────────────────────────────
+            'belarus nuclear', 'russian nuclear belarus', 'tactical nuclear belarus',
+            'iskander belarus', 'belarus nuclear sharing', 'nuclear weapons belarus',
+            # ── NATO border / Suwałki Gap ────────────────────────────────
+            'belarus nato', 'belarus poland border', 'belarus lithuania border',
+            'belarus latvia border', 'belarus ukraine border',
+            'suwalki gap', 'suwałki gap', 'suwalki corridor',
+            'belarus border', 'belarusian border',
+            # ── Wagner / military ────────────────────────────────────────
+            'wagner belarus', 'wagner group belarus', 'prigozhin belarus',
+            'belarus army', 'belarusian army', 'belarus military',
+            'khrenin', 'viktor khrenin', 'belarus defense minister',
+            'belta', 'belarus state media',
+            # ── Iran cooperation (Apr 27 2026 IR-RU-BY trilateral) ───────
+            'belarus iran', 'iran belarus', 'belarus iran cooperation',
+            'belarus iran defense', 'talaei-nik belarus',
+            'sco belarus', 'belarus shanghai cooperation',
+            'iran belarus minsk', 'belarus axis',
+            # ── Migrant weaponization / hybrid threats ───────────────────
+            'belarus migrants', 'belarus border crisis', 'belarus poland migrants',
+            'belarus hybrid warfare', 'belarus weaponized migration',
+            # ── Economic / sanctions ─────────────────────────────────────
+            'belarus sanctions', 'belarus economy', 'belarus ruble',
+            'belarus eu sanctions', 'belarus oil',
+            # ── Ukraine war angle ────────────────────────────────────────
+            'belarus ukraine war', 'belarus invasion', 'belarus troop movements',
+            'belarus offensive', 'belarus second front',
+        ],
+        'reddit_keywords': [
+            'Belarus', 'Lukashenko', 'Minsk', 'Tikhanovskaya',
+            'Belarus Russia', 'Belarus opposition', 'Suwalki Gap',
+            'Belarus nuclear', 'Belarus NATO', 'Wagner Belarus',
+            'Belarus Ukraine', 'Belarus border'
+        ]
     }
 }
 
@@ -976,7 +1035,8 @@ REDDIT_SUBREDDITS = {
     'cyprus': ['cyprus', 'europe', 'geopolitics', 'worldnews', 'unitedkingdom'],
     'azerbaijan': ['azerbaijan', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense'],
     'armenia': ['armenia', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense', 'ArmeniaAzerbaijan'],
-    'hungary': ['hungary', 'europe', 'geopolitics', 'worldnews', 'europeanunion']
+    'hungary': ['hungary', 'europe', 'geopolitics', 'worldnews', 'europeanunion'],
+    'belarus': ['belarus', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense']
 }
 
 # ========================================
@@ -2945,6 +3005,38 @@ def _run_threat_scan(target, days=7):
             except Exception as e:
                 print(f"Hungary GDELT ({lang}) error: {e}")
 
+    if target == 'belarus':
+        try:
+            rss_articles.extend(fetch_google_news_rss(
+                'Belarus Lukashenko Russia nuclear NATO border opposition',
+                'Belarus News'))
+        except Exception as e:
+            print(f"Belarus Google News error: {e}")
+
+        # Belarus-specific GDELT queries — Russian client state, NATO border,
+        # Iran cooperation (Apr 2026 trilateral), nuclear sharing, opposition
+        belarus_queries = [
+            # ── English ──
+            ('Belarus Lukashenko Russia Putin nuclear', 'eng'),
+            ('Belarus Iran defense cooperation Khrenin Talaei-Nik', 'eng'),
+            ('Belarus Ukraine border troops military', 'eng'),
+            ('Belarus Poland Lithuania border NATO Suwalki', 'eng'),
+            ('Belarus Tikhanovskaya opposition political prisoners', 'eng'),
+            ('Wagner Belarus Russian troops deployment', 'eng'),
+            ('Belarus EU sanctions migrant border crisis', 'eng'),
+            # ── Russian (rus) — Belarusian outlets publish heavily in Russian ──
+            ('Беларусь Лукашенко Россия НАТО', 'rus'),
+            ('Беларусь Украина граница войска', 'rus'),
+            ('Беларусь Иран сотрудничество военное', 'rus'),
+            ('Беларусь оппозиция Тихановская санкции', 'rus'),
+        ]
+        for query, lang in belarus_queries:
+            try:
+                articles = fetch_gdelt_articles(query, days, lang)
+                rss_articles.extend(articles)
+            except Exception as e:
+                print(f"Belarus GDELT ({lang}) error: {e}")
+
     telegram_articles = []
     if TELEGRAM_AVAILABLE:
         try:
@@ -2953,6 +3045,9 @@ def _run_threat_scan(target, days=7):
             if target == 'hungary':
                 from telegram_signals_europe import fetch_hungary_telegram_signals
                 telegram_msgs = fetch_hungary_telegram_signals(hours_back=days*24)
+            elif target == 'belarus':
+                from telegram_signals_europe import fetch_belarus_telegram_signals
+                telegram_msgs = fetch_belarus_telegram_signals(hours_back=days*24)
             elif target == 'greenland':
                 from telegram_signals_europe import fetch_greenland_telegram_signals
                 telegram_msgs = fetch_greenland_telegram_signals(hours_back=days*24)
