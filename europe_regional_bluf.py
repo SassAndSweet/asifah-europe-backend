@@ -350,6 +350,15 @@ def _read_all_trackers():
     trackers = {}
     for theatre, redis_key in TRACKER_KEYS.items():
         raw = _redis_get(redis_key)
+        # DIAGNOSTIC: dump what BLUF actually reads for Belarus + Ukraine
+        if theatre in ('belarus', 'ukraine'):
+            if raw:
+                top_keys = list(raw.keys())[:15] if isinstance(raw, dict) else 'NOT A DICT'
+                print(f'[Europe BLUF DIAG] {theatre} raw type={type(raw).__name__} top_keys={top_keys}')
+                if isinstance(raw, dict):
+                    print(f'[Europe BLUF DIAG] {theatre} theatre_score={raw.get("theatre_score")!r} alert_level={raw.get("alert_level")!r}')
+            else:
+                print(f'[Europe BLUF DIAG] {theatre} raw is None/empty')
         if raw:
             normalized = _normalize_tracker_data(theatre, raw)
             if normalized:
