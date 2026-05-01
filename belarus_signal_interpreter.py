@@ -414,12 +414,30 @@ def _fetch_commodity_signal():
         commodities = d.get('commodity_summaries') or []
         top_signals_in = d.get('top_signals') or []
 
-        modifier_map = {'normal': 0, 'elevated': 1, 'high': 3, 'critical': 5}
+        modifier_map = {'normal': 0, 'elevated': 1, 'high': 3, 'critical': 5, 'surge': 5}
         modifier = modifier_map.get(alert, 0)
 
-        # Build short_text from top commodity by signal count
+        # Strategic priority — Belarus's distinctive commodities first.
+        # Potash is the analytically distinctive Belarus signal (Belaruskali, ~20% global supply).
+        # Oil (Druzhba transit) and gas (100% Russian dependency) are secondary.
+        # Falls back to highest-signal-count if no priority match.
+        BELARUS_COMMODITY_PRIORITY = ['potash', 'oil', 'natural_gas']
+
         if commodities:
-            top_c = max(commodities, key=lambda c: c.get('signal_count', 0) or 0)
+            top_c = None
+            # Try priority list first (only pick if it has at least 1 signal)
+            for priority_key in BELARUS_COMMODITY_PRIORITY:
+                for c in commodities:
+                    if (c.get('commodity') == priority_key
+                            and (c.get('signal_count', 0) or 0) >= 1):
+                        top_c = c
+                        break
+                if top_c:
+                    break
+            # Fallback: highest signal count overall
+            if not top_c:
+                top_c = max(commodities, key=lambda c: c.get('signal_count', 0) or 0)
+
             top_name = (top_c.get('name') or top_c.get('commodity') or 'commodity').upper()
             top_sigs = top_c.get('signal_count', 0)
             short = f"Commodity Pressure: {alert.upper()} — {top_name} ({top_sigs} signals)"
