@@ -234,3 +234,37 @@ def fetch_bluesky_for_target(target, days=7, max_posts_per_account=20):
 
     print(f'[Bluesky] {target}: {len(all_posts)} posts from {accounts_queried} accounts queried')
     return all_posts
+
+# ────────────────────────────────────────────────────────────────
+# NAMED WRAPPER FUNCTIONS (called by rhetoric trackers)
+# ────────────────────────────────────────────────────────────────
+# Each rhetoric tracker imports a named function for its target.
+# These are thin wrappers around fetch_bluesky_for_target() to
+# match the import contract used by tracker files.
+
+def fetch_belarus_bluesky_signals(days=7, max_posts_per_account=20):
+    """Bluesky posts relevant to Belarus tracker."""
+    return fetch_bluesky_for_target('belarus',
+                                    days=days,
+                                    max_posts_per_account=max_posts_per_account)
+
+
+def fetch_ukraine_bluesky_signals(days=7, max_posts_per_account=20):
+    """Bluesky posts relevant to Ukraine tracker."""
+    return fetch_bluesky_for_target('ukraine',
+                                    days=days,
+                                    max_posts_per_account=max_posts_per_account)
+
+
+def fetch_russia_bluesky_signals(days=7, max_posts_per_account=20):
+    """Bluesky posts relevant to Russia tracker (for future use)."""
+    return fetch_bluesky_for_target('russia',
+                                    days=days,
+                                    max_posts_per_account=max_posts_per_account)
+
+
+def fetch_greenland_bluesky_signals(days=7, max_posts_per_account=20):
+    """Bluesky posts relevant to Greenland tracker (for future use)."""
+    return fetch_bluesky_for_target('greenland',
+                                    days=days,
+                                    max_posts_per_account=max_posts_per_account)
