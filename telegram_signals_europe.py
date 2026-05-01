@@ -261,6 +261,69 @@ def fetch_belarus_telegram_signals(hours_back=120):
         print(f"[Telegram Belarus] ❌ fetch error: {str(e)[:200]}")
         return []
 
+# ────────────────────────────────────────────────────────────
+# UKRAINE TELEGRAM (v1.0.0 — May 2026)
+# ────────────────────────────────────────────────────────────
+UKRAINE_CHANNELS = [
+    # ── Ukrainian government / official ─────────────────────────
+    'V_Zelenskiy_official',    # Zelensky's official Telegram
+    'Pravda_Gerashchenko',     # Anton Gerashchenko (former MoIA advisor)
+    'mfaukraine',              # Ukraine MFA
+    # ── Ukrainian press (English/Ukrainian) ─────────────────────
+    'KyivIndependent_official',  # Kyiv Independent
+    'ukrpravda_news',          # Ukrainska Pravda
+    'ukrinform',               # Ukrinform state news
+    # ── Defense / OSINT (Ukraine-focused) ───────────────────────
+    'OSINTdefender',           # OSINT Defender — broad combat OSINT
+    'wartranslated',           # WarTranslated — Russian-side primary source translations
+    'ClashReport',             # ClashReport — broad OSINT
+    # ── Russian-language coverage ───────────────────────────────
+    'meduzaio',                # Meduza — independent Russian journalism
+    'currenttime',             # Current Time — RFE/RL Russian
+    # ── EU institutional monitoring ─────────────────────────────
+    'EUvsDisinfo',             # Russian disinformation tracking
+    # ── Cross-theater (Iran-Russia-Ukraine axis) ────────────────
+    'MiddleEastSpectator',     # ME-Russia-Iran axis (Iranian drone supply context)
+]
+
+
+def fetch_ukraine_telegram_signals(hours_back=72):
+    """
+    Fetch Telegram signals for Ukraine rhetoric tracker.
+    Uses 72h (3 day) window — Ukraine signal moves on faster rhythm than
+    Belarus (active war, daily strikes/aid announcements/diplomatic shifts).
+
+    Key signals to watch:
+      - Zelensky statements re: ceasefire / aid / defense industrial
+      - Ukrainian armed forces operational reports
+      - US aid pipeline status (Trump statements, Witkoff envoy activity)
+      - Drone advisor exports (GCC partnerships, training operations)
+      - Frontline pressure (advances, retreats, salient defense)
+      - Black Sea grain corridor disruption
+      - Energy infrastructure strikes
+      - Russian Shahed/Kalibr/Kinzhal salvos
+    """
+    if not _telegram_available():
+        print("[Telegram Ukraine] Signals unavailable — skipping")
+        return []
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                future = pool.submit(asyncio.run, _async_fetch_messages(UKRAINE_CHANNELS, hours_back))
+                return future.result(timeout=120)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(_async_fetch_messages(UKRAINE_CHANNELS, hours_back))
+            finally:
+                loop.close()
+    except Exception as e:
+        print(f"[Telegram Ukraine] ❌ fetch error: {str(e)[:200]}")
+        return []
+
 def fetch_hungary_telegram_signals(hours_back=120):
     """
     Fetch Telegram signals for Hungary stability tracker.
