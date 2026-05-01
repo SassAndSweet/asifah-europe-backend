@@ -75,6 +75,32 @@ except ImportError:
     RUSSIA_RHETORIC_AVAILABLE = False
     print("[Europe Backend] ⚠️ Russia rhetoric tracker not available")
 
+# Belarus rhetoric tracker + signals interpreter
+try:
+    from rhetoric_tracker_belarus import (
+        register_belarus_rhetoric_endpoints,
+        start_background_refresh as start_belarus_rhetoric_refresh,
+    )
+    from belarus_signal_interpreter import interpret_signals as belarus_interpret_signals
+    BELARUS_RHETORIC_AVAILABLE = True
+    print("[Europe Backend] ✅ Belarus rhetoric tracker loaded")
+except ImportError as e:
+    BELARUS_RHETORIC_AVAILABLE = False
+    print(f"[Europe Backend] ⚠️ Belarus rhetoric tracker not available: {e}")
+
+# Ukraine rhetoric tracker + signals interpreter
+try:
+    from rhetoric_tracker_ukraine import (
+        register_ukraine_rhetoric_endpoints,
+        start_background_refresh as start_ukraine_rhetoric_refresh,
+    )
+    from ukraine_signal_interpreter import interpret_signals as ukraine_interpret_signals
+    UKRAINE_RHETORIC_AVAILABLE = True
+    print("[Europe Backend] ✅ Ukraine rhetoric tracker loaded")
+except ImportError as e:
+    UKRAINE_RHETORIC_AVAILABLE = False
+    print(f"[Europe Backend] ⚠️ Ukraine rhetoric tracker not available: {e}")
+
 # Russia stability index
 try:
     from russia_stability import register_russia_stability_endpoints
@@ -3808,6 +3834,18 @@ if RUSSIA_RHETORIC_AVAILABLE:
     register_russia_rhetoric_endpoints(app)
     start_russia_rhetoric_refresh()
     print("[Europe Backend] ✅ Russia rhetoric routes registered")
+
+# Register Belarus rhetoric tracker
+if BELARUS_RHETORIC_AVAILABLE:
+    register_belarus_rhetoric_endpoints(app)
+    start_belarus_rhetoric_refresh()
+    print("[Europe Backend] ✅ Belarus rhetoric routes registered + refresh started")
+
+# Register Ukraine rhetoric tracker
+if UKRAINE_RHETORIC_AVAILABLE:
+    register_ukraine_rhetoric_endpoints(app)
+    start_ukraine_rhetoric_refresh()
+    print("[Europe Backend] ✅ Ukraine rhetoric routes registered + refresh started")
 
 # Register Russia stability index
 if RUSSIA_STABILITY_AVAILABLE:
