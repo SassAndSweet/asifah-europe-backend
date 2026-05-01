@@ -408,11 +408,28 @@ def _fetch_commodity_signal():
         pressure = d.get('commodity_pressure', 0)
         commodities = d.get('commodity_summaries') or []
 
-        modifier_map = {'normal': 0, 'elevated': 1, 'high': 3, 'critical': 5}
+        modifier_map = {'normal': 0, 'elevated': 1, 'high': 3, 'critical': 5, 'surge': 5}
         modifier = modifier_map.get(alert, 0)
 
+        # Strategic priority — Ukraine's distinctive commodities first.
+        # Wheat is the headline (pre-war top-5 wheat exporter, Black Sea corridor signal).
+        # Corn and sunflower_oil are secondary (Odesa port dependency, ~50% global sunflower).
+        # Falls back to highest-signal-count if no priority match.
+        UKRAINE_COMMODITY_PRIORITY = ['wheat', 'corn', 'sunflower_oil']
+
         if commodities:
-            top_c = max(commodities, key=lambda c: c.get('signal_count', 0) or 0)
+            top_c = None
+            for priority_key in UKRAINE_COMMODITY_PRIORITY:
+                for c in commodities:
+                    if (c.get('commodity') == priority_key
+                            and (c.get('signal_count', 0) or 0) >= 1):
+                        top_c = c
+                        break
+                if top_c:
+                    break
+            if not top_c:
+                top_c = max(commodities, key=lambda c: c.get('signal_count', 0) or 0)
+
             top_name = (top_c.get('name') or top_c.get('commodity') or 'commodity').upper()
             top_sigs = top_c.get('signal_count', 0)
             short = f"Commodity Pressure: {alert.upper()} — {top_name} ({top_sigs} signals)"
