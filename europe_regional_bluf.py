@@ -194,30 +194,41 @@ def _safe_str(val, default=''):
 def _normalize_tracker_data(theatre, raw_data):
     """
     Convert raw Europe tracker cache into canonical shape.
-    Russia + Greenland use ME-pattern: result['interpretation'] wraps the
-    interpreter output. Both also store top-level theatre_level / theatre_score.
+    Dual-pattern aware:
+      - ME-pattern (Russia, Greenland): result['interpretation'] wraps interpreter output.
+      - Top-level pattern (Belarus, Ukraine v1.0+): so_what/red_lines/top_signals
+        emitted directly at root of result dict.
     """
     if not raw_data:
         return None
 
     flag = THEATRE_FLAGS.get(theatre, '')
+    # Try interpretation wrapper first; fall back to top-level keys
     interp = _safe_dict(raw_data.get('interpretation'))
-    so_what    = _safe_dict(interp.get('so_what'))
-    red_lines  = _safe_dict(interp.get('red_lines'))
-    green_lines = _safe_dict(interp.get('green_lines'))
-    diplomatic = _safe_dict(interp.get('diplomatic_track'))
+    so_what    = _safe_dict(interp.get('so_what')          or raw_data.get('so_what'))
+    red_lines  = _safe_dict(interp.get('red_lines')        or raw_data.get('red_lines'))
+    green_lines = _safe_dict(interp.get('green_lines')     or raw_data.get('green_lines'))
+    diplomatic = _safe_dict(interp.get('diplomatic_track') or raw_data.get('diplomatic_track'))
 
     # ---- THREAT LEVEL ----
+    # Belarus/Ukraine emit alert_level (string: normal/elevated/high/critical).
+    # Convert to integer level using canonical map.
+    ALERT_TO_LEVEL = {'normal': 0, 'elevated': 1, 'high': 2, 'critical': 4}
+    alert_level_str = (raw_data.get('alert_level') or '').lower()
     threat = _safe_int(raw_data.get('theatre_level',
                        raw_data.get('overall_level',
                        raw_data.get('threat_level', 0))))
+    if threat == 0 and alert_level_str in ALERT_TO_LEVEL:
+        threat = ALERT_TO_LEVEL[alert_level_str]
 
     # ---- SCORE ----
-    # Russia emits theatre_score natively; Greenland emits theatre_score natively.
+    # Belarus/Ukraine emit theatre_score AND pressure_score (same value).
+    # Russia + Greenland emit theatre_score.
     # Fallback: level × 20 if none present.
     score = _safe_int(raw_data.get('theatre_score',
+                      raw_data.get('pressure_score',
                       raw_data.get('rhetoric_score',
-                      raw_data.get('overall_score', 0))))
+                      raw_data.get('overall_score', 0)))))
     if score == 0 and threat:
         score = int(threat) * 20
 
@@ -254,7 +265,7 @@ def _normalize_tracker_data(theatre, raw_data):
         'green_lines':  green_lines,
         'diplomatic_track': diplomatic,
         'top_signals':  top_signals,
-        'scanned_at':   _safe_str(raw_data.get('scanned_at') or raw_data.get('timestamp', '')),
+        'scanned_at':   _safe_str(raw_data.get('scanned_at') or raw_data.get('cached_at') or raw_data.get('timestamp', '')),
         'raw':          raw_data,
     }
 
