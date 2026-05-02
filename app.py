@@ -498,7 +498,9 @@ TRAVEL_ADVISORY_CODES = {
     'azerbaijan': ['AJ'],
     'armenia': ['AM'],
     'hungary': ['HU'],
-    'belarus': ['BO'],   # State Dept code for Belarus is 'BO'
+    'belarus': ['BO'],          # State Dept code for Belarus is 'BO'
+    'turkmenistan': ['TX'],     # State Dept code for Turkmenistan is 'TX'
+    'kazakhstan': ['KZ'],       # State Dept code for Kazakhstan is 'KZ'
 }
 
 TRAVEL_ADVISORY_LEVELS = {
@@ -762,6 +764,14 @@ TARGET_BASELINES = {
     'belarus': {
         'base_adjustment': +9,
         'description': 'Russian client state hosting Russian nuclear weapons; Suwałki Gap NATO proximity; Iran defense cooperation activated April 2026 (IR-RU-BY trilateral); Lukashenko succession question; Tikhanovskaya opposition in exile; Wagner remnants; Ukraine border militarization'
+    },
+    'turkmenistan': {
+        'base_adjustment': +4,
+        'description': 'Closed-society gas giant deeply dependent on China (80%+ of exports via CAGP); Galkynysh Phase 4 with CNPC launched April 2026; TAPI pipeline progressing through Afghanistan/Pakistan war zone; Trans-Caspian pipeline stalled; father-son Berdimuhamedov dynasty; permanent neutrality doctrine; Iran transit corridor (Caspian shipping origin per WSJ April 2026)'
+    },
+    'kazakhstan': {
+        'base_adjustment': +6,
+        'description': 'Central Asia\'s indispensable state — world #1 uranium producer (~40% global supply); CPC pipeline (Russia-routed oil export vulnerability); Tengiz/Karachaganak/Kashagan supergiant fields; March 15 2026 constitutional referendum (87.15% approval) consolidating Tokayev authority via Kurultai + Vice Presidency; Middle Corridor anchor bypassing Russia/Iran; Russian-language northern minority demographic vulnerability; Iran transit corridor via Caspian (Aktau port)'
     }
 }
 
@@ -1054,6 +1064,122 @@ TARGET_KEYWORDS = {
             'Belarus nuclear', 'Belarus NATO', 'Wagner Belarus',
             'Belarus Ukraine', 'Belarus border'
         ]
+    },
+    'turkmenistan': {
+        'keywords': [
+            # ── Country & leadership ──────────────────────────────────────
+            'turkmenistan', 'turkmen', 'ashgabat', 'mary province',
+            'serdar berdimuhamedov', 'serdar berdymukhamedov',
+            'gurbanguly berdimuhamedov', 'gurbanguly berdymukhamedov',
+            'halk maslahaty', 'national leader turkmen',
+            'turkmen president', 'turkmen government',
+            # ── Russian-language transliterations ─────────────────────────
+            'туркменистан', 'ашхабад', 'бердымухамедов',
+            'сердар бердымухамедов', 'гурбангулы бердымухамедов',
+            # ── Turkmen-language native (Latin script) ────────────────────
+            'türkmenistan', 'aşgabat', 'türkmengaz', 'türkmen',
+            'halk maslahaty türkmenistan',
+            # ── Energy: Galkynysh + gas exports ───────────────────────────
+            'galkynysh', 'galkynysh gas field', 'galkynysh phase 4',
+            'turkmengaz', 'turkmen gas', 'turkmenistan gas',
+            'yashlar', 'garakol gas field', 'turkmen oil',
+            'cnpc turkmenistan', 'cnpc galkynysh',
+            # ── China vector ──────────────────────────────────────────────
+            'china turkmenistan', 'turkmenistan china', 'central asia china pipeline',
+            'cagp', 'cagp line d', 'central asia gas pipeline',
+            'turkmenistan china gas', 'ding xuexiang turkmenistan',
+            # ── TAPI pipeline ─────────────────────────────────────────────
+            'tapi pipeline', 'tapi gas pipeline',
+            'turkmenistan afghanistan pakistan india',
+            'tapi afghanistan', 'tapi serhetabat', 'tapi herat',
+            # ── Trans-Caspian / Europe export aspirations ─────────────────
+            'trans-caspian pipeline', 'trans caspian gas',
+            'turkmenistan europe gas', 'turkmenistan eu energy',
+            'turkmenistan azerbaijan gas',
+            # ── Iran transit corridor (WSJ April 2026 vector) ─────────────
+            'turkmenistan iran', 'iran turkmenistan', 'turkmenbashi port',
+            'turkmen caspian shipping', 'turkmenistan caspian export',
+            'turkmenistan sanctions evasion',
+            # ── Awaza / CIS summit October 2026 ───────────────────────────
+            'awaza summit', 'cis summit awaza', 'turkmenistan cis',
+            'turkmenistan russia summit',
+            # ── Closed-society / human rights / regime ────────────────────
+            'turkmenistan human rights', 'turkmenistan press freedom',
+            'turkmenistan dissident', 'turkmenistan opposition',
+            'turkmenistan permanent neutrality',
+        ],
+        'reddit_keywords': [
+            'Turkmenistan', 'Berdimuhamedov', 'Galkynysh', 'Ashgabat',
+            'TAPI pipeline', 'Turkmenistan China', 'Trans-Caspian',
+            'Central Asia', 'Turkmen gas', 'CNPC Turkmenistan'
+        ]
+    },
+    'kazakhstan': {
+        'keywords': [
+            # ── Country & leadership ──────────────────────────────────────
+            'kazakhstan', 'kazakh', 'astana', 'almaty', 'aktau',
+            'tokayev', 'kassym-jomart tokayev', 'kassym jomart tokayev',
+            'kazakh president', 'akorda', 'akorda press',
+            'olzhas bektenov', 'kazakh prime minister',
+            'kazakhstan government', 'nazarbayev',
+            # ── Russian-language transliterations ─────────────────────────
+            'казахстан', 'астана', 'алматы', 'актау',
+            'токаев', 'касым-жомарт токаев', 'назарбаев',
+            'казахстанский', 'тенгиз', 'кашаган', 'карачаганак',
+            # ── Kazakh-language native (Latin script per 2017 reform) ─────
+            'qazaqstan', 'qazaq', 'astana qazaqstan',
+            'qazaqstan respublikasy', 'kurultai qazaqstan',
+            # ── Constitutional reform 2026 ────────────────────────────────
+            'kazakhstan constitution', 'kazakhstan referendum',
+            'kazakhstan constitutional reform', 'kurultai kazakhstan',
+            'kazakhstan unicameral', 'kazakhstan vice president',
+            'mazhilis abolished', 'kazakhstan senate abolished',
+            'tokayev succession', 'tokayev second term',
+            'new kazakhstan', 'kazakhstan halyk kenesi',
+            # ── Energy: oil supergiants + CPC pipeline ────────────────────
+            'tengiz oil', 'tengiz field', 'tengizchevroil',
+            'kashagan field', 'kashagan oil', 'kashagan operator',
+            'karachaganak field', 'karachaganak gas',
+            'cpc pipeline', 'caspian pipeline consortium',
+            'kazakhstan crude', 'kazakh oil exports',
+            'kaztransoil', 'atasu alashankou',
+            'kazmunaygas', 'kazmunaigas',
+            # ── Uranium (#1 globally) ─────────────────────────────────────
+            'kazakhstan uranium', 'kazatomprom', 'kazakh uranium',
+            'kazakhstan nuclear fuel', 'uranium mining kazakhstan',
+            'kazakhstan nuclear power', 'rosatom kazakhstan',
+            'kazakhstan small modular reactor',
+            # ── Russia exposure / CSTO / 2022 unrest ──────────────────────
+            'kazakhstan russia', 'russia kazakhstan', 'cstO kazakhstan',
+            'bloody january kazakhstan', 'january 2022 kazakhstan',
+            'kazakhstan northern minority', 'kazakhstan russian language',
+            'kazakhstan russian speakers', 'kazakhstan denazification',
+            # ── China vector ──────────────────────────────────────────────
+            'china kazakhstan', 'kazakhstan china', 'kazakhstan belt road',
+            'kazakhstan bri', 'xi jinping kazakhstan',
+            'kazakhstan rare earth', 'kazakhstan critical minerals',
+            # ── Middle Corridor / Trans-Caspian transit ───────────────────
+            'middle corridor', 'titr', 'trans caspian transport',
+            'kazakhstan georgia route', 'aktau caspian shipping',
+            'kazakhstan turkey corridor', 'kazakhstan azerbaijan',
+            # ── Iran transit corridor (WSJ April 2026 vector) ─────────────
+            'kazakhstan iran', 'iran kazakhstan', 'aktau iran shipping',
+            'kazakh caspian export iran', 'kazakhstan sanctions evasion',
+            # ── Western engagement ────────────────────────────────────────
+            'b5+1', 'b5 plus 1', 'central asia summit',
+            'kazakhstan eu critical raw materials',
+            'kazakhstan blinken', 'kazakhstan us partnership',
+            # ── Civil liberties / opposition ──────────────────────────────
+            'kazakhstan opposition', 'kazakhstan dissident',
+            'kazakhstan press freedom', 'kazakhstan protest',
+            'kazakhstan civil society',
+        ],
+        'reddit_keywords': [
+            'Kazakhstan', 'Tokayev', 'Astana', 'Almaty',
+            'Tengiz', 'Kashagan', 'Kazatomprom', 'CPC pipeline',
+            'Middle Corridor', 'Kazakhstan China', 'Kazakhstan Russia',
+            'Kazakhstan uranium', 'Kazakhstan referendum'
+        ]
     }
 }
 
@@ -1071,7 +1197,9 @@ REDDIT_SUBREDDITS = {
     'azerbaijan': ['azerbaijan', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense'],
     'armenia': ['armenia', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense', 'ArmeniaAzerbaijan'],
     'hungary': ['hungary', 'europe', 'geopolitics', 'worldnews', 'europeanunion'],
-    'belarus': ['belarus', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense']
+    'belarus': ['belarus', 'europe', 'geopolitics', 'worldnews', 'CredibleDefense'],
+    'turkmenistan': ['CentralAsia', 'geopolitics', 'worldnews', 'energy'],
+    'kazakhstan': ['Kazakhstan', 'CentralAsia', 'geopolitics', 'worldnews', 'energy']
 }
 
 # ========================================
