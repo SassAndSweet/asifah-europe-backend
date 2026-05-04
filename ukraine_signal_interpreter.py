@@ -450,9 +450,30 @@ def _fetch_commodity_signal():
             long_parts.append(f"Top exposures by signal count: {cmd_summary}.")
         long = ' '.join(long_parts)
 
+        # Map alert level → integer level (matches escalation ladder used elsewhere)
+        # AND alert color (matches commodity_tracker palette so card visuals are consistent)
+        ALERT_LEVEL_MAP = {
+            'normal':    1,    # gray-cool baseline
+            'elevated':  3,    # amber
+            'high':      4,    # orange
+            'critical':  5,    # red
+            'surge':     5,    # red — same severity as critical
+        }
+        ALERT_COLOR_MAP = {
+            'normal':    '#3b82f6',   # blue — baseline rhetoric
+            'elevated':  '#fbbf24',   # amber
+            'high':      '#fb923c',   # orange
+            'critical':  '#ef4444',   # red
+            'surge':     '#dc2626',   # deep red — convergence trigger
+        }
+        int_level = ALERT_LEVEL_MAP.get(alert, 1)
+        alert_color = ALERT_COLOR_MAP.get(alert, '#6b7280')
+
         band = {
             'category':    'commodity',
-            'level':       alert,
+            'level':       int_level,        # int — matches schema used elsewhere
+            'alert_level': alert,             # keep the string too for display/debug
+            'color':       alert_color,       # explicit color so europe BLUF doesn't fall through to gray
             'short_text':  short,
             'long_text':   long,
             'icon':        '🛢️',
