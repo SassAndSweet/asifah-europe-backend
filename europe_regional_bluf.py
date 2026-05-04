@@ -512,6 +512,113 @@ def _build_bluf_prose(posture, trackers):
 # ============================================================
 # TOP SIGNALS COLLECTOR
 # ============================================================
+def _fetch_commodity_pressure(commodity_id):
+    """
+    Look up a commodity's global pressure state from commodity_tracker.
+    Mirrors the ME BLUF pattern; same backend, same Redis cache.
+
+    Returns dict with alert_level, signal_count, etc. — or None on any failure.
+    """
+    try:
+        from commodity_tracker import load_commodity_cache
+        cache = load_commodity_cache()
+        if not cache:
+            return None
+        commodity_summaries = cache.get('commodity_summaries', {}) or {}
+        cs = commodity_summaries.get(commodity_id)
+        if not cs or not isinstance(cs, dict):
+            return None
+        return {
+            'alert_level':     cs.get('alert_level', 'normal'),
+            'pressure_score':  cs.get('total_score', 0),
+            'signal_count':    cs.get('signal_count', 0),
+        }
+    except ImportError:
+        return None
+    except Exception as e:
+        print(f'[Europe BLUF] Commodity pressure fetch failed for {commodity_id}: {e}')
+        return None
+
+
+def _apply_convergence_enrichments_europe(signals):
+    """
+    Layer 2 enrichment for Europe BLUF — registry-driven cross-regional convergence.
+
+    Walks the convergence registry. For any convergence whose `regions` list includes
+    'europe', AND whose commodity is currently at the configured threshold, locate
+    the relevant signal in this region's `signals` list (by theatre or commodity tag)
+    and stamp the {convergence_id}_active flag onto it.
+
+    This mirrors the ME BLUF Layer 2 enrichment pattern. The downstream effect:
+      - GPI's _detect_convergences_from_registry sees the flag on the Europe signal
+      - Cross-regional convergences emit Tier-1 narratives in GPI
+      - Adding a new Europe-relevant convergence is zero code change here
+
+    Mutates `signals` in place; returns the list for convenience.
+    """
+    try:
+        from convergence_registry import (
+            CONVERGENCE_REGISTRY,
+            alert_meets_threshold,
+            format_enrichment_text,
+        )
+    except ImportError:
+        return signals
+
+    for entry in CONVERGENCE_REGISTRY:
+        # Only process convergences whose region list includes Europe
+        regions = entry.get('regions', [])
+        if 'europe' not in regions:
+            continue
+
+        # Check current commodity state
+        commodity_id = entry.get('commodity')
+        if not commodity_id:
+            continue
+        cs = _fetch_commodity_pressure(commodity_id)
+        if not cs:
+            continue
+        if not alert_meets_threshold(cs['alert_level'], entry.get('commodity_threshold', 'elevated')):
+            continue
+
+        # Find the Europe-side signal that should carry the flag.
+        # Strategy: prefer a commodity signal from the source-side theatre (e.g.
+        # ukraine for wheat). If none, fall back to ANY commodity-tagged signal.
+        # If still none, no Europe signal to enrich — convergence will still be
+        # detected via ME side (this is belt-and-suspenders cross-regional).
+        target_signal = None
+        for sig in signals:
+            cat = (sig.get('category') or '').lower()
+            if 'commodity' in cat:
+                # Prefer signal from ukraine (the Black Sea source)
+                if sig.get('theatre') == 'ukraine':
+                    target_signal = sig
+                    break
+                # Otherwise hold onto first commodity signal as fallback
+                if target_signal is None:
+                    target_signal = sig
+
+        if not target_signal:
+            continue
+
+        # Stamp the flag and convergence state for GPI
+        active_flag = f'{entry["id"]}_active'
+        target_signal[active_flag] = True
+        states = target_signal.setdefault('convergence_states', {})
+        states[entry['id']] = {
+            'alert_level':  cs['alert_level'],
+            'signal_count': cs['signal_count'],
+        }
+        # Append enrichment text to long_text for display
+        enrichment = format_enrichment_text(entry, cs['alert_level'], cs['signal_count'])
+        existing_long = target_signal.get('long_text', '') or target_signal.get('short_text', '')
+        target_signal['long_text'] = (existing_long + ' ' + enrichment).strip()
+        print(f'[Europe BLUF] Convergence stamped: {entry["id"]} on signal {target_signal.get("category")} '
+              f'(theatre={target_signal.get("theatre")}, commodity={commodity_id}, alert={cs["alert_level"]})')
+
+    return signals
+
+
 def _build_signals(posture, trackers):
     """Collect, dedupe, and rank top_signals across Europe trackers."""
     all_signals = []
@@ -545,6 +652,12 @@ def _build_signals(posture, trackers):
                               f'simultaneous with Greenland sovereignty crisis L{greenland_threat}. '
                               f'Russia exploiting US-Denmark friction; classic GIUK pressure window.',
             })
+
+    # Layer 2: Apply cross-regional convergence enrichments from CONVERGENCE_REGISTRY.
+    # This stamps {convergence_id}_active flags onto Europe-side signals (typically the
+    # Ukraine commodity signal) when the Europe side of a registered convergence is
+    # active. GPI detector reads the flag and emits a Tier-1 narrative.
+    all_signals = _apply_convergence_enrichments_europe(all_signals)
 
     # Sort + dedupe
     all_signals.sort(key=lambda x: x.get('priority', 0), reverse=True)
