@@ -512,31 +512,57 @@ def _build_bluf_prose(posture, trackers):
 # ============================================================
 # TOP SIGNALS COLLECTOR
 # ============================================================
-def _fetch_commodity_pressure(commodity_id):
+def _fetch_commodity_pressure_via_proxy(commodity_id):
     """
-    Look up a commodity's global pressure state from commodity_tracker.
-    Mirrors the ME BLUF pattern; same backend, same Redis cache.
+    Look up a commodity's GLOBAL pressure state via the Europe backend's
+    commodity_proxy_europe module. The proxy fetches from ME backend
+    (where commodity_tracker actually lives) and caches in Europe Redis.
 
-    Returns dict with alert_level, signal_count, etc. — or None on any failure.
+    Strategy: pull any country exposure (using ukraine as canonical anchor —
+    it's a major wheat producer so always present in commodity_summaries),
+    then read the GLOBAL alert state from that country's commodity entry.
+    The global_alert_level / global_signal_count / global_total_score fields
+    were added yesterday specifically so country pages can know global state
+    without a second API call. We piggyback on that here.
+
+    Returns dict with alert_level, signal_count, pressure_score — or None on failure.
     """
     try:
-        from commodity_tracker import load_commodity_cache
-        cache = load_commodity_cache()
-        if not cache:
-            return None
-        commodity_summaries = cache.get('commodity_summaries', {}) or {}
-        cs = commodity_summaries.get(commodity_id)
-        if not cs or not isinstance(cs, dict):
-            return None
-        return {
-            'alert_level':     cs.get('alert_level', 'normal'),
-            'pressure_score':  cs.get('total_score', 0),
-            'signal_count':    cs.get('signal_count', 0),
+        from commodity_proxy_europe import get_commodity_data
+        # Ukraine always has wheat exposure mapped — using it as the anchor target
+        # to pull global wheat state. For other commodities (oil, gas) other anchors
+        # may need to be selected, but each commodity has an obvious source country
+        # we can use as anchor.
+        ANCHOR_TARGETS = {
+            'wheat':  'ukraine',
+            'oil':    'russia',
+            'gas':    'russia',
+            'nickel': 'russia',
+            # Add more anchors as new convergences land
         }
+        anchor = ANCHOR_TARGETS.get(commodity_id)
+        if not anchor:
+            return None
+
+        country_data = get_commodity_data(anchor)
+        if not country_data or not country_data.get('success', True):
+            return None
+
+        commodity_summaries = country_data.get('commodity_summaries', []) or []
+        # Look for the requested commodity in this country's summaries
+        for cs in commodity_summaries:
+            if cs.get('commodity') == commodity_id:
+                return {
+                    'alert_level':     cs.get('global_alert_level', 'normal'),
+                    'pressure_score':  cs.get('global_total_score', 0),
+                    'signal_count':    cs.get('global_signal_count', 0),
+                }
+        return None
     except ImportError:
+        # commodity_proxy_europe not deployed — silent no-op
         return None
     except Exception as e:
-        print(f'[Europe BLUF] Commodity pressure fetch failed for {commodity_id}: {e}')
+        print(f'[Europe BLUF] Commodity pressure proxy fetch failed for {commodity_id}: {e}')
         return None
 
 
@@ -554,6 +580,10 @@ def _apply_convergence_enrichments_europe(signals):
       - Cross-regional convergences emit Tier-1 narratives in GPI
       - Adding a new Europe-relevant convergence is zero code change here
 
+    Architecture note: commodity state is fetched via commodity_proxy_europe
+    (which round-trips to ME backend over HTTP). This keeps commodity_tracker
+    as the single source of truth on the ME backend.
+
     Mutates `signals` in place; returns the list for convenience.
     """
     try:
@@ -563,6 +593,7 @@ def _apply_convergence_enrichments_europe(signals):
             format_enrichment_text,
         )
     except ImportError:
+        # convergence_registry not deployed to Europe backend yet — silent no-op
         return signals
 
     for entry in CONVERGENCE_REGISTRY:
@@ -571,11 +602,11 @@ def _apply_convergence_enrichments_europe(signals):
         if 'europe' not in regions:
             continue
 
-        # Check current commodity state
+        # Check current commodity state via Europe backend's proxy module
         commodity_id = entry.get('commodity')
         if not commodity_id:
             continue
-        cs = _fetch_commodity_pressure(commodity_id)
+        cs = _fetch_commodity_pressure_via_proxy(commodity_id)
         if not cs:
             continue
         if not alert_meets_threshold(cs['alert_level'], entry.get('commodity_threshold', 'elevated')):
@@ -657,6 +688,8 @@ def _build_signals(posture, trackers):
     # This stamps {convergence_id}_active flags onto Europe-side signals (typically the
     # Ukraine commodity signal) when the Europe side of a registered convergence is
     # active. GPI detector reads the flag and emits a Tier-1 narrative.
+    # Architecture: commodity state is fetched via commodity_proxy_europe (HTTP to ME
+    # backend). Single source of truth for commodity data stays on ME backend.
     all_signals = _apply_convergence_enrichments_europe(all_signals)
 
     # Sort + dedupe
