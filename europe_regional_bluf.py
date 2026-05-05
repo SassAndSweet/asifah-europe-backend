@@ -382,7 +382,7 @@ def _synthesize_top_signals_legacy(theatre, raw_data, threat_int, score, so_what
             'long_text':  f'{flag} {display} red line breached at L{threat_int}: {label}',
         })
 
-    # Theatre-high
+    # Theatre-high (L4+ — incident/active conflict tier)
     if threat_int >= 4:
         signals.append({
             'priority':   9 + threat_int,
@@ -390,6 +390,25 @@ def _synthesize_top_signals_legacy(theatre, raw_data, threat_int, score, so_what
             'theatre':    theatre,
             'level':      threat_int,
             'icon':       '🔴',
+            'color':      ESCALATION_COLORS.get(threat_int, '#6b7280'),
+            'short_text': f'{flag} {display} L{threat_int} — {ESCALATION_LABELS.get(threat_int, "")}',
+            'long_text':  f'{flag} {display} at L{threat_int} {ESCALATION_LABELS.get(threat_int, "")} (score {score}/100)',
+        })
+
+    # Theatre-active (L1-L3 — rhetoric/warning/direct-threat tier) — v2.3.0 NEW
+    # Previously L1-L3 trackers emitted no signals from legacy synth, leaving
+    # them invisible to GPI's kinetic axis aggregation. Now they surface as
+    # lower-priority signals that don't compete with L4+ for top slots but
+    # still propagate to axis cards. Russia at L1 (Rhetoric, score 44) is an
+    # analyst-relevant signal and should be visible.
+    elif threat_int >= 1:
+        # Sliding priority: L1=5, L2=6, L3=7 — well below theatre_high range (13-14)
+        signals.append({
+            'priority':   4 + threat_int,
+            'category':   'theatre_active',
+            'theatre':    theatre,
+            'level':      threat_int,
+            'icon':       '🟡' if threat_int <= 1 else ('🟠' if threat_int == 2 else '🔶'),
             'color':      ESCALATION_COLORS.get(threat_int, '#6b7280'),
             'short_text': f'{flag} {display} L{threat_int} — {ESCALATION_LABELS.get(threat_int, "")}',
             'long_text':  f'{flag} {display} at L{threat_int} {ESCALATION_LABELS.get(threat_int, "")} (score {score}/100)',
