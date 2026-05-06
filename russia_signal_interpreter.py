@@ -41,6 +41,9 @@ Russia is the ONLY theater actor that directly affects ALL other theaters.
 Author: RCGG / Asifah Analytics
 """
 
+import os
+import json
+import requests
 from datetime import datetime, timezone
 
 
@@ -417,6 +420,208 @@ HISTORICAL_PRECEDENTS = [
 # ============================================================
 # CORE SCORING FUNCTIONS
 # ============================================================
+
+# ============================================
+# COMMODITY LEVERAGE SIGNALS (Phase 4 Gold Standard — May 6 2026)
+# ============================================
+# Russia's commodity activity is a LEVERAGE signal, not a regime stress signal.
+# Russia is producer-dominant: #1 wheat exporter, #2 oil/gas, dominant fertilizer.
+# When global commodity markets surge, Russia's revenue + geopolitical leverage
+# rise — the inverse of how Iran/Lebanon read commodity pressure (consumer stress).
+#
+# This function extracts hybrid (data + so-what) commodity signals for BLUF/GPI
+# consumption. Each signal is two sentences:
+#   Sentence 1: data point (price level, alert state, signal count)
+#   Sentence 2: leverage/strategic implication for Russia
+#
+# Signals only emit at HIGH or SURGE global alert (filters out noise).
+# Reads from europe:commodity:russia Redis key (populated by Europe proxy).
+
+COMMODITY_PROXY_REDIS_KEY_RU = 'europe:commodity:russia'
+
+# Per-commodity strategic framing — hand-tuned narratives that translate
+# market signal into geopolitical implication. Used as Sentence 2 in two-sentence
+# commodity signals.
+RUSSIA_COMMODITY_FRAMINGS = {
+    'wheat': {
+        'icon':  '🌾',
+        'short': 'Russia is world\'s #1 wheat exporter (~$17B/yr); export leverage activated',
+        'long':  ('Russia is world\'s #1 wheat exporter (~$17B/yr). Black Sea grain corridor '
+                  'and African food-security pressure become active policy levers; export '
+                  'tax adjustments translate directly to MENA bread inflation.'),
+    },
+    'oil': {
+        'icon':  '🛢️',
+        'short': 'Russia is world\'s #2 oil producer; G7 price cap pressure + shadow fleet revenue',
+        'long':  ('Russia is world\'s #2 oil producer (Urals crude). G7 $60/bbl price cap '
+                  'erodes when Brent runs above ~$95; shadow fleet captures spread, war '
+                  'financing cushion expands.'),
+    },
+    'natural_gas': {
+        'icon':  '⛽',
+        'short': 'Russia is world\'s #2 gas producer; pivot-to-Asia leverage',
+        'long':  ('Russia is world\'s #2 natural gas producer (Gazprom, Yamal LNG). European '
+                  'market loss largely replaced via Power of Siberia + China LNG offtake; '
+                  'gas pricing becomes BRICS+ alignment lever.'),
+    },
+    'gold': {
+        'icon':  '🥇',
+        'short': 'BRICS+ gold barter accelerating sanctions-evasion settlement',
+        'long':  ('Gold surge accelerates Russia-China-Iran barter settlement architecture. '
+                  'Central bank gold reserves act as ruble defense + alternative to frozen '
+                  'FX reserves; de-dollarization narrative reinforced.'),
+    },
+    'uranium': {
+        'icon':  '☢️',
+        'short': 'Rosatom HALEU enrichment dominance is sanctions chokepoint',
+        'long':  ('Russia controls ~46% of global enrichment capacity (Rosatom/Tenex). '
+                  'HALEU dominance for advanced reactors is the West\'s critical sanctions '
+                  'gap; Tenex sanctions compliance becomes leverage point.'),
+    },
+    'potash': {
+        'icon':  '🌱',
+        'short': 'Russia is world\'s #2 potash producer; agricultural input leverage',
+        'long':  ('Russia is world\'s #2 potash producer (Uralkali). Combined with Belarus '
+                  '(#3, sanctioned), Russia influences ~40% of global fertilizer supply — '
+                  'translates into Latin American + African agricultural input pressure.'),
+    },
+    'nickel': {
+        'icon':  '🔩',
+        'short': 'Norilsk Nickel dominance affects EV battery + stainless supply chains',
+        'long':  ('Russia is world\'s #3 nickel producer (~270K tons/yr; Norilsk Nickel/'
+                  'Nornickel). LME delisting risk and Western EV battery sourcing constraints '
+                  'create both sanctions exposure AND China-bloc consolidation pressure.'),
+    },
+    'cobalt': {
+        'icon':  '⚙️',
+        'short': 'Russia is world\'s #3 cobalt producer; battery supply chain vector',
+        'long':  ('Russia is world\'s #3 cobalt producer (Norilsk Nickel by-product). '
+                  'Battery supply chain pressure compounds with DRC concentration risk; '
+                  'critical-minerals geopolitics intersect with EV transition vulnerabilities.'),
+    },
+    'silver': {
+        'icon':  '🪙',
+        'short': 'Russia is ~5% of global silver supply; sanctions complicate Western flow',
+        'long':  ('Russia produces ~39.8 Moz silver/year (~5% global), Polymetal + Norilsk '
+                  'by-product. Sanctions compliance complications affect industrial silver '
+                  '(solar, electronics) and precious-metal sanctions evasion routing.'),
+    },
+}
+
+
+def _read_commodity_pressure_for_russia():
+    """
+    Read commodity-pressure data from Europe proxy Redis cache.
+    Used by signal interpreter to inject leverage signals into Russia BLUF.
+    Returns None if cache cold / unavailable / errored — signals fall back gracefully.
+    """
+    upstash_url   = os.environ.get('UPSTASH_REDIS_URL') or os.environ.get('UPSTASH_REDIS_REST_URL')
+    upstash_token = os.environ.get('UPSTASH_REDIS_TOKEN') or os.environ.get('UPSTASH_REDIS_REST_TOKEN')
+    if not (upstash_url and upstash_token):
+        return None
+    try:
+        resp = requests.get(
+            f"{upstash_url}/get/{COMMODITY_PROXY_REDIS_KEY_RU}",
+            headers={"Authorization": f"Bearer {upstash_token}"},
+            timeout=5
+        )
+        data = resp.json()
+        if not data.get('result'):
+            return None
+        bundle = json.loads(data['result'])
+        return bundle if isinstance(bundle, dict) else None
+    except Exception as e:
+        print(f"[Russia Interpreter] Commodity read error (non-fatal): {str(e)[:120]}")
+        return None
+
+
+def _extract_commodity_leverage_signals(scan_data):
+    """
+    Phase 4 Gold Standard — extract Russia commodity leverage signals.
+
+    Returns a list of signal dicts:
+        [{
+            'category':   'commodity_leverage',
+            'commodity':  'wheat',
+            'priority':   int,    # higher = more important; surge=15, high=10
+            'icon':       '🌾',
+            'level':      'surge' | 'high',
+            'short_text': str,    # ~25-35 words, 2 sentences (data + so-what)
+            'long_text':  str,    # full paragraph for tooltip / detail view
+        }, ...]
+
+    Only emits at HIGH or SURGE global alert (filters noise).
+    Empty list if no commodity data or all clear.
+    """
+    # Pull commodity bundle — first try scan_data injection, then Redis fallback
+    cp = scan_data.get('commodity_pressure') or _read_commodity_pressure_for_russia()
+    if not cp or not isinstance(cp, dict):
+        return []
+
+    summaries = cp.get('commodity_summaries') or []
+    if not summaries:
+        return []
+
+    signals = []
+    for tile in summaries:
+        commodity_id = str(tile.get('commodity', '')).lower()
+        global_alert = str(tile.get('global_alert_level', 'normal')).lower()
+
+        # Filter: only emit at high/surge (signal hygiene — avoids noise)
+        if global_alert not in ('high', 'surge'):
+            continue
+
+        framing = RUSSIA_COMMODITY_FRAMINGS.get(commodity_id)
+        if not framing:
+            continue  # No strategic framing defined; skip rather than emit weak signal
+
+        # Sparkline for context
+        sparkline = tile.get('sparkline') or {}
+        price = sparkline.get('price')
+        pct_30d = sparkline.get('change_pct_30d', 0) or 0
+        signal_count = tile.get('global_signal_count', 0) or 0
+
+        # Sentence 1: data — what's happening in the market
+        if price is not None:
+            arrow = '▲' if pct_30d >= 0 else '▼'
+            data_sentence = (
+                f"{tile.get('name', commodity_id.title())} in {global_alert.upper()} "
+                f"globally — ${price:.2f} {arrow}{abs(pct_30d):.2f}% (30d), {signal_count} signals tracked."
+            )
+        else:
+            data_sentence = (
+                f"{tile.get('name', commodity_id.title())} in {global_alert.upper()} "
+                f"globally — {signal_count} signals tracked."
+            )
+
+        # Sentence 2: strategic framing — why this matters for Russia
+        strategic_sentence = framing['long'].split('.', 1)[1].strip() if '.' in framing['long'] else framing['long']
+        # Use the long-form's 2nd+ sentences as the so-what (skipping the redundant fact)
+        long_text = framing['long']
+
+        # Combine: short_text = 2-sentence hybrid (~25-35 words target)
+        short_text = data_sentence + ' ' + strategic_sentence
+
+        # Priority: surge > high; deduce by global alert
+        priority = 15 if global_alert == 'surge' else 10
+
+        signals.append({
+            'category':   'commodity_leverage',
+            'commodity':  commodity_id,
+            'priority':   priority,
+            'icon':       framing['icon'],
+            'level':      global_alert,
+            'short_text': short_text,
+            'long_text':  long_text,
+            'price':      price,
+            'change_pct_30d': pct_30d,
+            'signal_count': signal_count,
+        })
+
+    # Sort surge first, then high; within tier, retain registry order
+    signals.sort(key=lambda s: -s['priority'])
+    return signals
+
 
 def _score_red_lines(scan_data):
     """Evaluate Russia signal state against red lines."""
@@ -1088,6 +1293,10 @@ def interpret_signals(scan_data):
         approaching = [r for r in red_lines if r['status'] == 'APPROACHING']
         active_gl   = [g for g in green_lines if g['status'] == 'ACTIVE']
 
+        # Phase 4 Gold Standard — extract commodity leverage signals (May 6 2026)
+        # Non-fatal: empty list if commodity proxy cache cold or all alerts normal
+        commodity_signals = _extract_commodity_leverage_signals(scan_data)
+
         return {
             'so_what':             so_what,
             'red_lines': {
@@ -1104,7 +1313,12 @@ def interpret_signals(scan_data):
             },
             'diplomatic_track':    diplomatic,
             'historical_matches':  historical,
-            'interpreter_version': '1.0.0',
+            # Phase 4 Gold Standard — commodity leverage signals for BLUF/GPI consumption
+            # Each signal is hybrid 2-sentence: data point + strategic framing
+            # Filter: only HIGH/SURGE global alert (signal hygiene)
+            'commodity_signals':   commodity_signals,
+            'commodity_active':    len(commodity_signals) > 0,
+            'interpreter_version': '1.1.0-commodity-aware',
             'interpreted_at':      datetime.now(timezone.utc).isoformat(),
         }
 
@@ -1116,7 +1330,9 @@ def interpret_signals(scan_data):
             'green_lines':        {'triggered': [], 'active_count': 0, 'signaled_count': 0, 'diplomatic_score': 0},
             'diplomatic_track':   {'score': 0, 'scenario': 'Unknown', 'maximum_pressure': False},
             'historical_matches': [],
-            'interpreter_version': '1.0.0',
+            'commodity_signals':  [],
+            'commodity_active':   False,
+            'interpreter_version': '1.1.0-commodity-aware',
             'error':              str(e)[:200],
         }
 
