@@ -207,6 +207,37 @@ RED_LINES = [
         'source':   'Analytical: simultaneous multi-theater Russian pressure has no Cold War analog. '
                     'Iran weapons + DPRK ammunition + Cuba SIGINT = structured alliance.',
     },
+    # ── v1.1.0 (May 6 2026) — Russia-China convergence red line ──
+    {
+        'id':       'russia_china_convergence',
+        'label':    'Russia-China Strategic Convergence',
+        'detail':   'Russia and China demonstrating coordinated strategic alignment -- '
+                    'Putin-Xi summits, Power of Siberia 2 progress, dual-use export confirmation, '
+                    'or joint military exercises beyond routine baseline',
+        'severity': 2,
+        'color':    '#f97316',
+        'icon':     '🤝',
+        'category': 'cross_theater',
+        'source':   'Strategic: Russia-China "no limits partnership" (Feb 2022) is the structural '
+                    'foundation for Russian sanctions resilience. Tier-2 escalation (not nuclear-grade) '
+                    'but represents the most consequential geopolitical realignment of the decade.',
+    },
+    # ── v1.1.0 (May 6 2026) — Russia-Iran axis red line ──
+    {
+        'id':       'russia_iran_axis_active',
+        'label':    'Russia-Iran Axis Active Coordination',
+        'detail':   'Russia-Iran demonstrating active strategic coordination beyond baseline -- '
+                    'top-level diplomatic meetings (Putin-Araghchi, Putin-Pezeshkian), '
+                    'satellite/space cooperation, weapons transfers (Shahed, S-400), '
+                    'mediation channel substitution, or UN Security Council coordination',
+    'severity': 2,
+        'color':    '#f97316',
+        'icon':     '🚀',
+        'category': 'cross_theater',
+        'source':   'Strategic: Iran-Russia comprehensive partnership (2025) is operationally active. '
+                    'Watch for Caspian trade workaround, uranium handover signals, '
+                    'and Russian targeting data to IRGC strikes.',
+    },
     {
         'id':       'hybrid_infrastructure_attack',
         'label':    'Confirmed Hybrid Attack on NATO Infrastructure',
@@ -685,10 +716,51 @@ def _score_red_lines(scan_data):
         ['us suspends aid', 'aid pause', 'halt aid ukraine',
          'trump stops ukraine', 'aid cut ukraine']
     )
+    # v1.1.0: cross_theater now includes russia_iran_axis actor (where the deepest Iran-axis
+    # keywords live) AND multilingual phrases (Russian/Mandarin/Farsi) so signals from
+    # GDELT non-English queues actually trigger red lines.
     cross_theater = _scan_articles(
+        ['russia_military', 'russia_government', 'russia_iran_axis'],
+        [
+            # English
+            'dprk russia', 'iran russia weapons', 'north korea russia',
+            'cuba russia military', 'cross theater', 'axis resistance russia',
+            'iranian satellite russian launch', 'shahed russia iran',
+            # Russian
+            'россия кндр', 'россия иран', 'путин араgchi', 'путин пезешкиан',
+            # Farsi
+            'روسیه ایران', 'پوتین پزشکیان', 'عراقچی مسکو',
+        ]
+    )
+    # v1.1.0 — Russia-China convergence detection (separate from generic cross_theater)
+    russia_china_signal = _scan_articles(
         ['russia_military', 'russia_government'],
-        ['dprk russia', 'iran russia weapons', 'north korea russia',
-         'cuba russia military', 'cross theater', 'axis resistance russia']
+        [
+            # English
+            'putin xi', 'xi jinping putin', 'russia china military',
+            'power of siberia', 'russia china dual-use', 'russia china brics',
+            'russia china northern sea route', 'russia china arctic',
+            'china dual-use russia weapons',
+            # Russian
+            'россия китай военное', 'путин си цзиньпин', 'сила сибири',
+            # Mandarin
+            '俄罗斯 中国', '普京 习近平', '西伯利亚力量',
+        ]
+    )
+    # v1.1.0 — Russia-Iran axis active coordination detection (uses dedicated actor)
+    russia_iran_axis_signal = _scan_articles(
+        ['russia_iran_axis', 'russia_government', 'russia_military'],
+        [
+            # English — top-level diplomatic + arms + space
+            'putin araghchi', 'putin pezeshkian', 'mojtaba khamenei',
+            'iranian satellite russian launch', 'soyuz iran satellite',
+            'shahed russia iran', 'russia s-400 iran', 'caspian trade',
+            'russia iran defense pact', 'iran foreign minister moscow',
+            # Russian
+            'путин араgchi', 'путин пезешкиан', 'россия иран ракеты',
+            # Farsi
+            'پوتین پزشکیان', 'عراقچی مسکو', 'روسیه شاهد', 'دریای خزر تجارت',
+        ]
     )
     trump_putin_talks = _scan_articles(
         ['united_states', 'russia_government'],
@@ -800,6 +872,23 @@ def _score_red_lines(scan_data):
             **next(r for r in RED_LINES if r['id'] == 'cross_theater_coordination'),
             'status':  'BREACHED' if high_vectors >= 4 else 'APPROACHING',
             'trigger': f'{high_vectors} vectors at L3+ simultaneously -- maximum pressure pattern',
+        })
+
+    # ── v1.1.0 Russia-China convergence ──
+    if russia_china_signal:
+        triggered.append({
+            **next(r for r in RED_LINES if r['id'] == 'russia_china_convergence'),
+            'status':  'APPROACHING',
+            'trigger': 'Putin-Xi / Power of Siberia / dual-use / military coordination signals detected',
+        })
+
+    # ── v1.1.0 Russia-Iran axis ──
+    russia_iran_actor_level = actors.get('russia_iran_axis', {}).get('escalation_level', 0)
+    if russia_iran_axis_signal or russia_iran_actor_level >= 2:
+        triggered.append({
+            **next(r for r in RED_LINES if r['id'] == 'russia_iran_axis_active'),
+            'status':  'BREACHED' if russia_iran_actor_level >= 4 else 'APPROACHING',
+            'trigger': f'Russia-Iran axis actor at L{russia_iran_actor_level} + axis-keyword signals detected',
         })
 
     # ── Hybrid infrastructure attack ──
