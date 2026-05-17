@@ -181,6 +181,15 @@ ACTORS = {
             'Министерство обороны России', 'Генеральный штаб',
             'Герасимов', 'российская армия', 'вооружённые силы России',
             'российские войска', 'российский удар',
+            # Foreign-military procurement (v1.1 — May 17 — Cuban soldiers in Ukraine)
+            'cuban soldiers ukraine', 'cuban fighters russia',
+            'cubans fighting for russia', '5000 cuban soldiers',
+            'cuban mercenaries russia', 'cuban recruits russia',
+            'russia pays cuban soldiers', '$25000 cuban soldier',
+            'putin meat grinder cuban', 'cuban troops russia ukraine',
+            'foreign fighters russia', 'foreign legion russia',
+            'кубинцы Украина', 'кубинские солдаты Россия',
+            'кубинские наемники',
         ],
         'baseline_statements_per_week': 25,
         'tripwires': [
