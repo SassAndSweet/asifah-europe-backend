@@ -1,16 +1,26 @@
 """
 russia_signal_interpreter.py
 Asifah Analytics -- Europe Backend Module
-v1.0.0 -- April 2026
+v1.1.0 -- May 17, 2026
 
 Signal interpretation engine for the Russia Rhetoric Tracker.
 
-Russia's analytical frame is FIVE-WAY:
+v1.1 adds CARIBBEAN FOOTHOLD RECOGNITION — recognizing when Russia is
+forward-staging kinetic capability in Cuba (the structural 1962 pattern,
+not just SIGINT/oil access). The Axios disclosure of 300 drones to Cuba
+from Russia + Iran requires the Russia interpreter to recognize Cuba as
+a STRATEGIC theater, not just an axis-of-resistance partner.
+
+Russia's analytical frame is now SIX-WAY:
 
   1. Is Russia signaling conventional escalation on NATO's eastern flank?
      (Baltic, Poland, Kaliningrad, Finland, Suwalki Gap)
   2. Is nuclear rhetoric coercive posturing vs. genuine doctrinal signal?
      (Medvedev/Putin language ladder, Iskander, SSBN, doctrine shifts)
+  6. [v1.1] Is Russia forward-staging kinetic capability in Cuba?
+     (drones, advisers, weapons transfer — the 1962 Caribbean foothold pattern
+     in multilateralized 21st-century form, often coordinated with Iran)
+
   3. Is the Ukraine war trajectory shifting?
      (Russian gains = emboldened; losses = desperate escalation)
      (Ukrainian diplomatic posture = off-ramp or entrenchment)
@@ -41,9 +51,6 @@ Russia is the ONLY theater actor that directly affects ALL other theaters.
 Author: RCGG / Asifah Analytics
 """
 
-import os
-import json
-import requests
 from datetime import datetime, timezone
 
 
@@ -207,37 +214,6 @@ RED_LINES = [
         'source':   'Analytical: simultaneous multi-theater Russian pressure has no Cold War analog. '
                     'Iran weapons + DPRK ammunition + Cuba SIGINT = structured alliance.',
     },
-    # ── v1.1.0 (May 6 2026) — Russia-China convergence red line ──
-    {
-        'id':       'russia_china_convergence',
-        'label':    'Russia-China Strategic Convergence',
-        'detail':   'Russia and China demonstrating coordinated strategic alignment -- '
-                    'Putin-Xi summits, Power of Siberia 2 progress, dual-use export confirmation, '
-                    'or joint military exercises beyond routine baseline',
-        'severity': 2,
-        'color':    '#f97316',
-        'icon':     '🤝',
-        'category': 'cross_theater',
-        'source':   'Strategic: Russia-China "no limits partnership" (Feb 2022) is the structural '
-                    'foundation for Russian sanctions resilience. Tier-2 escalation (not nuclear-grade) '
-                    'but represents the most consequential geopolitical realignment of the decade.',
-    },
-    # ── v1.1.0 (May 6 2026) — Russia-Iran axis red line ──
-    {
-        'id':       'russia_iran_axis_active',
-        'label':    'Russia-Iran Axis Active Coordination',
-        'detail':   'Russia-Iran demonstrating active strategic coordination beyond baseline -- '
-                    'top-level diplomatic meetings (Putin-Araghchi, Putin-Pezeshkian), '
-                    'satellite/space cooperation, weapons transfers (Shahed, S-400), '
-                    'mediation channel substitution, or UN Security Council coordination',
-    'severity': 2,
-        'color':    '#f97316',
-        'icon':     '🚀',
-        'category': 'cross_theater',
-        'source':   'Strategic: Iran-Russia comprehensive partnership (2025) is operationally active. '
-                    'Watch for Caspian trade workaround, uranium handover signals, '
-                    'and Russian targeting data to IRGC strikes.',
-    },
     {
         'id':       'hybrid_infrastructure_attack',
         'label':    'Confirmed Hybrid Attack on NATO Infrastructure',
@@ -277,6 +253,65 @@ RED_LINES = [
         'category': 'deescalation',
         'source':   'Any Ukraine ceasefire would reduce the primary Russian military '
                     'pressure absorption point and shift focus to diplomatic settlement.',
+    },
+
+    # ─── v1.1: CARIBBEAN FOOTHOLD / 1962 COALITION RECOGNITION ───
+    # The Axios disclosure (May 17, 2026) of 300 drones from Russia + Iran
+    # to Cuba is a structural revival of the October 1962 forward-staging
+    # doctrine — multilateralized, denial-capable, but functionally
+    # equivalent to Soviet Cuba positioning. Russia's interpreter must
+    # recognize this as a STRATEGIC pivot, not just access exploitation.
+    {
+        'id':       'russia_cuba_kinetic_weapons_transfer',
+        'label':    'Russia Transferring Kinetic Weapons to Cuba (Caribbean Foothold Doctrine)',
+        'detail':   'Russia transferring drones, missiles, or other kinetic-strike weapons to '
+                    'Cuba — distinct from historical SIGINT (Lourdes) or oil (Rosneft) access '
+                    'patterns. Forward-staging strike capability 90 miles from US territory '
+                    'is the canonical October 1962 doctrinal frame in 21st-century form.',
+        'severity': 3,
+        'color':    '#dc2626',
+        'icon':     '🚀',
+        'category': 'cross_theater',
+        'source':   'Soviet Cuba 1962-1991 was the canonical forward-deployment posture for '
+                    'Russian strategic competition with the US. 2026 revival via drones (vs '
+                    'MRBMs) reduces strategic-strike footprint but increases tactical-strike '
+                    'ambiguity. Combined with Cuban soldiers in Ukraine, signals Moscow '
+                    'treating Cuba as a structural strategic asset, not just sanctions evasion.',
+    },
+    {
+        'id':       'russia_cuban_soldiers_procurement',
+        'label':    'Russia Procuring Foreign Military Labor from Cuba',
+        'detail':   'Documented Cuban soldier deployment to Russian forces in Ukraine — '
+                    'reportedly ~5,000 soldiers at ~$25,000/soldier paid to the Cuban '
+                    'government. Foreign-military-labor procurement at scale is a new '
+                    'Russian strategic adaptation distinct from Wagner/PMC patterns.',
+        'severity': 2,
+        'color':    '#ef4444',
+        'icon':     '🪖',
+        'category': 'foreign_military',
+        'source':   'Soviet doctrine relied on Warsaw Pact allies (East Germans, Cubans in '
+                    'Angola/Ethiopia). 2026 Cuban-soldiers-in-Ukraine signal revives this '
+                    'pattern but commercializes it — Cuba receives hard currency, Russia '
+                    'receives meat-grinder reinforcements without domestic mobilization cost. '
+                    'The financial arrangement makes Cuba structurally dependent on Russia '
+                    'for foreign exchange, deepening the strategic relationship.',
+    },
+    {
+        'id':       'russia_iran_cuba_coalition_active',
+        'label':    'Russia + Iran Coalition Forward-Staging in Cuba (1962 Pattern)',
+        'detail':   'BOTH Russia AND Iran simultaneously transferring weapons or military '
+                    'capability to Cuba within a 30-day window. Coordinated coalition '
+                    'forward-deployment vs unilateral access exploitation. Structural '
+                    'analog to October 1962, multilateralized.',
+        'severity': 3,
+        'color':    '#7c0a02',
+        'icon':     '🤝',
+        'category': 'cross_theater',
+        'source':   'The 1962 Cuban Missile Crisis was bilateral USSR-Cuba. The 2026 case is '
+                    'multilateral RU-IR-Cuba. Multilateral coalition staging increases '
+                    'ambiguity (which adversary launched?), reduces deterrence clarity, and '
+                    'creates new escalation pathways the Cold War doctrine never addressed. '
+                    'This is the highest-confidence Western Hemisphere coalition-threat signal.',
     },
 ]
 
@@ -445,214 +480,37 @@ HISTORICAL_PRECEDENTS = [
         'window_hours': 336,
         'confidence':   'Medium',
     },
+
+    # ─── v1.1: 1962 Caribbean foothold analog ───
+    {
+        'id':          'cuba_october_1962',
+        'label':       'October 1962 Cuban Missile Crisis (Caribbean Foothold Doctrine)',
+        'description': 'Soviet forward-staging of MRBMs in Cuba — the canonical Russian '
+                       'Western Hemisphere strategic-pressure precedent. 13 days of '
+                       'confrontation ending in mutual withdrawal (USSR removed missiles, '
+                       'US removed Jupiter missiles from Turkey + pledged no-invasion).',
+        'source':      'Khrushchev memoirs; Kennedy administration tapes; National Security Archive '
+                       'JFK Library declassified collection; Allyn/Blight/Welch *Cuba on the Brink*',
+        'signals': {
+            'russia_cuba_weapons':  True,    # russia_cuba_kinetic_weapons_transfer red line breached
+            'russia_military_min':  3,
+        },
+        'outcome':      'Historical pattern: forward-deployment of Russian kinetic capability '
+                        'in Cuba triggered the most dangerous nuclear crisis of the Cold War. '
+                        '2026 revival is multilateralized (RU+IR vs sole USSR) and tactical '
+                        '(drones vs MRBMs) but structurally identical: hostile-state forward '
+                        'staging 90 miles from US territory during regime brittleness. The '
+                        '1962 resolution required US concessions (Turkey missiles, no-invasion '
+                        'pledge) — the 2026 case offers no obvious symmetric trade space.',
+        'window_hours': 720,  # 30-day pattern window
+        'confidence':   'High',
+    },
 ]
 
 
 # ============================================================
 # CORE SCORING FUNCTIONS
 # ============================================================
-
-# ============================================
-# COMMODITY LEVERAGE SIGNALS (Phase 4 Gold Standard — May 6 2026)
-# ============================================
-# Russia's commodity activity is a LEVERAGE signal, not a regime stress signal.
-# Russia is producer-dominant: #1 wheat exporter, #2 oil/gas, dominant fertilizer.
-# When global commodity markets surge, Russia's revenue + geopolitical leverage
-# rise — the inverse of how Iran/Lebanon read commodity pressure (consumer stress).
-#
-# This function extracts hybrid (data + so-what) commodity signals for BLUF/GPI
-# consumption. Each signal is two sentences:
-#   Sentence 1: data point (price level, alert state, signal count)
-#   Sentence 2: leverage/strategic implication for Russia
-#
-# Signals only emit at HIGH or SURGE global alert (filters out noise).
-# Reads from europe:commodity:russia Redis key (populated by Europe proxy).
-
-COMMODITY_PROXY_REDIS_KEY_RU = 'europe:commodity:russia'
-
-# Per-commodity strategic framing — hand-tuned narratives that translate
-# market signal into geopolitical implication. Used as Sentence 2 in two-sentence
-# commodity signals.
-RUSSIA_COMMODITY_FRAMINGS = {
-    'wheat': {
-        'icon':  '🌾',
-        'short': 'Russia is world\'s #1 wheat exporter (~$17B/yr); export leverage activated',
-        'long':  ('Russia is world\'s #1 wheat exporter (~$17B/yr). Black Sea grain corridor '
-                  'and African food-security pressure become active policy levers; export '
-                  'tax adjustments translate directly to MENA bread inflation.'),
-    },
-    'oil': {
-        'icon':  '🛢️',
-        'short': 'Russia is world\'s #2 oil producer; G7 price cap pressure + shadow fleet revenue',
-        'long':  ('Russia is world\'s #2 oil producer (Urals crude). G7 $60/bbl price cap '
-                  'erodes when Brent runs above ~$95; shadow fleet captures spread, war '
-                  'financing cushion expands.'),
-    },
-    'natural_gas': {
-        'icon':  '⛽',
-        'short': 'Russia is world\'s #2 gas producer; pivot-to-Asia leverage',
-        'long':  ('Russia is world\'s #2 natural gas producer (Gazprom, Yamal LNG). European '
-                  'market loss largely replaced via Power of Siberia + China LNG offtake; '
-                  'gas pricing becomes BRICS+ alignment lever.'),
-    },
-    'gold': {
-        'icon':  '🥇',
-        'short': 'BRICS+ gold barter accelerating sanctions-evasion settlement',
-        'long':  ('Gold surge accelerates Russia-China-Iran barter settlement architecture. '
-                  'Central bank gold reserves act as ruble defense + alternative to frozen '
-                  'FX reserves; de-dollarization narrative reinforced.'),
-    },
-    'uranium': {
-        'icon':  '☢️',
-        'short': 'Rosatom HALEU enrichment dominance is sanctions chokepoint',
-        'long':  ('Russia controls ~46% of global enrichment capacity (Rosatom/Tenex). '
-                  'HALEU dominance for advanced reactors is the West\'s critical sanctions '
-                  'gap; Tenex sanctions compliance becomes leverage point.'),
-    },
-    'potash': {
-        'icon':  '🌱',
-        'short': 'Russia is world\'s #2 potash producer; agricultural input leverage',
-        'long':  ('Russia is world\'s #2 potash producer (Uralkali). Combined with Belarus '
-                  '(#3, sanctioned), Russia influences ~40% of global fertilizer supply — '
-                  'translates into Latin American + African agricultural input pressure.'),
-    },
-    'nickel': {
-        'icon':  '🔩',
-        'short': 'Norilsk Nickel dominance affects EV battery + stainless supply chains',
-        'long':  ('Russia is world\'s #3 nickel producer (~270K tons/yr; Norilsk Nickel/'
-                  'Nornickel). LME delisting risk and Western EV battery sourcing constraints '
-                  'create both sanctions exposure AND China-bloc consolidation pressure.'),
-    },
-    'cobalt': {
-        'icon':  '⚙️',
-        'short': 'Russia is world\'s #3 cobalt producer; battery supply chain vector',
-        'long':  ('Russia is world\'s #3 cobalt producer (Norilsk Nickel by-product). '
-                  'Battery supply chain pressure compounds with DRC concentration risk; '
-                  'critical-minerals geopolitics intersect with EV transition vulnerabilities.'),
-    },
-    'silver': {
-        'icon':  '🪙',
-        'short': 'Russia is ~5% of global silver supply; sanctions complicate Western flow',
-        'long':  ('Russia produces ~39.8 Moz silver/year (~5% global), Polymetal + Norilsk '
-                  'by-product. Sanctions compliance complications affect industrial silver '
-                  '(solar, electronics) and precious-metal sanctions evasion routing.'),
-    },
-}
-
-
-def _read_commodity_pressure_for_russia():
-    """
-    Read commodity-pressure data from Europe proxy Redis cache.
-    Used by signal interpreter to inject leverage signals into Russia BLUF.
-    Returns None if cache cold / unavailable / errored — signals fall back gracefully.
-    """
-    upstash_url   = os.environ.get('UPSTASH_REDIS_URL') or os.environ.get('UPSTASH_REDIS_REST_URL')
-    upstash_token = os.environ.get('UPSTASH_REDIS_TOKEN') or os.environ.get('UPSTASH_REDIS_REST_TOKEN')
-    if not (upstash_url and upstash_token):
-        return None
-    try:
-        resp = requests.get(
-            f"{upstash_url}/get/{COMMODITY_PROXY_REDIS_KEY_RU}",
-            headers={"Authorization": f"Bearer {upstash_token}"},
-            timeout=5
-        )
-        data = resp.json()
-        if not data.get('result'):
-            return None
-        bundle = json.loads(data['result'])
-        return bundle if isinstance(bundle, dict) else None
-    except Exception as e:
-        print(f"[Russia Interpreter] Commodity read error (non-fatal): {str(e)[:120]}")
-        return None
-
-
-def _extract_commodity_leverage_signals(scan_data):
-    """
-    Phase 4 Gold Standard — extract Russia commodity leverage signals.
-
-    Returns a list of signal dicts:
-        [{
-            'category':   'commodity_leverage',
-            'commodity':  'wheat',
-            'priority':   int,    # higher = more important; surge=15, high=10
-            'icon':       '🌾',
-            'level':      'surge' | 'high',
-            'short_text': str,    # ~25-35 words, 2 sentences (data + so-what)
-            'long_text':  str,    # full paragraph for tooltip / detail view
-        }, ...]
-
-    Only emits at HIGH or SURGE global alert (filters noise).
-    Empty list if no commodity data or all clear.
-    """
-    # Pull commodity bundle — first try scan_data injection, then Redis fallback
-    cp = scan_data.get('commodity_pressure') or _read_commodity_pressure_for_russia()
-    if not cp or not isinstance(cp, dict):
-        return []
-
-    summaries = cp.get('commodity_summaries') or []
-    if not summaries:
-        return []
-
-    signals = []
-    for tile in summaries:
-        commodity_id = str(tile.get('commodity', '')).lower()
-        global_alert = str(tile.get('global_alert_level', 'normal')).lower()
-
-        # Filter: only emit at high/surge (signal hygiene — avoids noise)
-        if global_alert not in ('high', 'surge'):
-            continue
-
-        framing = RUSSIA_COMMODITY_FRAMINGS.get(commodity_id)
-        if not framing:
-            continue  # No strategic framing defined; skip rather than emit weak signal
-
-        # Sparkline for context
-        sparkline = tile.get('sparkline') or {}
-        price = sparkline.get('price')
-        pct_30d = sparkline.get('change_pct_30d', 0) or 0
-        signal_count = tile.get('global_signal_count', 0) or 0
-
-        # Sentence 1: data — what's happening in the market
-        if price is not None:
-            arrow = '▲' if pct_30d >= 0 else '▼'
-            data_sentence = (
-                f"{tile.get('name', commodity_id.title())} in {global_alert.upper()} "
-                f"globally — ${price:.2f} {arrow}{abs(pct_30d):.2f}% (30d), {signal_count} signals tracked."
-            )
-        else:
-            data_sentence = (
-                f"{tile.get('name', commodity_id.title())} in {global_alert.upper()} "
-                f"globally — {signal_count} signals tracked."
-            )
-
-        # Sentence 2: strategic framing — why this matters for Russia
-        strategic_sentence = framing['long'].split('.', 1)[1].strip() if '.' in framing['long'] else framing['long']
-        # Use the long-form's 2nd+ sentences as the so-what (skipping the redundant fact)
-        long_text = framing['long']
-
-        # Combine: short_text = 2-sentence hybrid (~25-35 words target)
-        short_text = data_sentence + ' ' + strategic_sentence
-
-        # Priority: surge > high; deduce by global alert
-        priority = 15 if global_alert == 'surge' else 10
-
-        signals.append({
-            'category':   'commodity_leverage',
-            'commodity':  commodity_id,
-            'priority':   priority,
-            'icon':       framing['icon'],
-            'level':      global_alert,
-            'short_text': short_text,
-            'long_text':  long_text,
-            'price':      price,
-            'change_pct_30d': pct_30d,
-            'signal_count': signal_count,
-        })
-
-    # Sort surge first, then high; within tier, retain registry order
-    signals.sort(key=lambda s: -s['priority'])
-    return signals
-
 
 def _score_red_lines(scan_data):
     """Evaluate Russia signal state against red lines."""
@@ -716,51 +574,10 @@ def _score_red_lines(scan_data):
         ['us suspends aid', 'aid pause', 'halt aid ukraine',
          'trump stops ukraine', 'aid cut ukraine']
     )
-    # v1.1.0: cross_theater now includes russia_iran_axis actor (where the deepest Iran-axis
-    # keywords live) AND multilingual phrases (Russian/Mandarin/Farsi) so signals from
-    # GDELT non-English queues actually trigger red lines.
     cross_theater = _scan_articles(
-        ['russia_military', 'russia_government', 'russia_iran_axis'],
-        [
-            # English
-            'dprk russia', 'iran russia weapons', 'north korea russia',
-            'cuba russia military', 'cross theater', 'axis resistance russia',
-            'iranian satellite russian launch', 'shahed russia iran',
-            # Russian
-            'россия кндр', 'россия иран', 'путин араgchi', 'путин пезешкиан',
-            # Farsi
-            'روسیه ایران', 'پوتین پزشکیان', 'عراقچی مسکو',
-        ]
-    )
-    # v1.1.0 — Russia-China convergence detection (separate from generic cross_theater)
-    russia_china_signal = _scan_articles(
         ['russia_military', 'russia_government'],
-        [
-            # English
-            'putin xi', 'xi jinping putin', 'russia china military',
-            'power of siberia', 'russia china dual-use', 'russia china brics',
-            'russia china northern sea route', 'russia china arctic',
-            'china dual-use russia weapons',
-            # Russian
-            'россия китай военное', 'путин си цзиньпин', 'сила сибири',
-            # Mandarin
-            '俄罗斯 中国', '普京 习近平', '西伯利亚力量',
-        ]
-    )
-    # v1.1.0 — Russia-Iran axis active coordination detection (uses dedicated actor)
-    russia_iran_axis_signal = _scan_articles(
-        ['russia_iran_axis', 'russia_government', 'russia_military'],
-        [
-            # English — top-level diplomatic + arms + space
-            'putin araghchi', 'putin pezeshkian', 'mojtaba khamenei',
-            'iranian satellite russian launch', 'soyuz iran satellite',
-            'shahed russia iran', 'russia s-400 iran', 'caspian trade',
-            'russia iran defense pact', 'iran foreign minister moscow',
-            # Russian
-            'путин араgchi', 'путин пезешкиан', 'россия иран ракеты',
-            # Farsi
-            'پوتین پزشکیان', 'عراقچی مسکو', 'روسیه شاهد', 'دریای خزر تجارت',
-        ]
+        ['dprk russia', 'iran russia weapons', 'north korea russia',
+         'cuba russia military', 'cross theater', 'axis resistance russia']
     )
     trump_putin_talks = _scan_articles(
         ['united_states', 'russia_government'],
@@ -874,29 +691,63 @@ def _score_red_lines(scan_data):
             'trigger': f'{high_vectors} vectors at L3+ simultaneously -- maximum pressure pattern',
         })
 
-    # ── v1.1.0 Russia-China convergence ──
-    if russia_china_signal:
-        triggered.append({
-            **next(r for r in RED_LINES if r['id'] == 'russia_china_convergence'),
-            'status':  'APPROACHING',
-            'trigger': 'Putin-Xi / Power of Siberia / dual-use / military coordination signals detected',
-        })
-
-    # ── v1.1.0 Russia-Iran axis ──
-    russia_iran_actor_level = actors.get('russia_iran_axis', {}).get('escalation_level', 0)
-    if russia_iran_axis_signal or russia_iran_actor_level >= 2:
-        triggered.append({
-            **next(r for r in RED_LINES if r['id'] == 'russia_iran_axis_active'),
-            'status':  'BREACHED' if russia_iran_actor_level >= 4 else 'APPROACHING',
-            'trigger': f'Russia-Iran axis actor at L{russia_iran_actor_level} + axis-keyword signals detected',
-        })
-
     # ── Hybrid infrastructure attack ──
     if hybrid_signal or hybrid_level >= 3:
         triggered.append({
             **next(r for r in RED_LINES if r['id'] == 'hybrid_infrastructure_attack'),
             'status':  'BREACHED' if hybrid_level >= 4 else 'APPROACHING',
             'trigger': f'Hybrid attack signals detected + hybrid L{hybrid_level}',
+        })
+
+    # ─── v1.1: CARIBBEAN FOOTHOLD / 1962 COALITION SCORING ───
+    # Detect Russia kinetic weapons transfer to Cuba (drones, advanced systems)
+    russia_cuba_weapons_signal = _scan_articles(
+        ['russia_military', 'russia_government'],
+        ['russia cuba drone', 'russia cuba weapons', 'russian drones to cuba',
+         'russia drone transfer cuba', 'geran cuba', 'russian shahed cuba',
+         'russia drone supply cuba', 'russia drone shipment cuba',
+         'russia exports drones cuba', 'russia military equipment cuba',
+         'cuba 300 drones', 'cuba drones russia', 'russia cuba weapons transfer',
+         'russia weapons cuba']
+    )
+    russia_cuba_weapons_level = scan_data.get('russia_cuba_weapons_level', 0)
+    if russia_cuba_weapons_signal or russia_cuba_weapons_level >= 3:
+        triggered.append({
+            **next(r for r in RED_LINES if r['id'] == 'russia_cuba_kinetic_weapons_transfer'),
+            'status':  'BREACHED' if russia_cuba_weapons_signal else 'APPROACHING',
+            'trigger': 'Russia kinetic weapons transfer to Cuba detected — 1962 Caribbean foothold pattern' if russia_cuba_weapons_signal else f'russia_cuba_weapons L{russia_cuba_weapons_level} — approaching threshold',
+        })
+
+    # Detect Cuban-soldiers-Ukraine procurement signal
+    cuban_soldiers_signal = _scan_articles(
+        ['russia_military', 'russia_government'],
+        ['cuban soldiers ukraine', 'cuban fighters russia',
+         'cubans fighting russia', '5000 cuban soldiers',
+         'cuban mercenaries russia', 'cuban recruits russia',
+         'russia pays cuban', '25000 cuban soldier', '$25000 cuban',
+         'putin meat grinder cuban', 'cuban troops russia ukraine']
+    )
+    if cuban_soldiers_signal:
+        triggered.append({
+            **next(r for r in RED_LINES if r['id'] == 'russia_cuban_soldiers_procurement'),
+            'status':  'BREACHED',
+            'trigger': 'Cuban soldier deployment to Russian Ukraine operations confirmed',
+        })
+
+    # Detect Russia+Iran coalition staging (BOTH active)
+    # This is the highest-tier coalition signal — requires russia_cuba_weapons AND iran-side signal
+    iran_cuba_signal = _scan_articles(
+        ['russia_military', 'russia_government'],
+        ['iran cuba drone', 'iran cuba weapons', 'iran shahed cuba',
+         'iran mohajer cuba', 'iranian advisers cuba', 'iranian advisers havana',
+         'iran drone transfer cuba', 'iran cuba drone shipment',
+         'iran cuba drone pipeline']
+    )
+    if russia_cuba_weapons_signal and iran_cuba_signal:
+        triggered.append({
+            **next(r for r in RED_LINES if r['id'] == 'russia_iran_cuba_coalition_active'),
+            'status':  'BREACHED',
+            'trigger': 'Russia AND Iran simultaneously staging weapons in Cuba — multilateralized 1962 coalition pattern active',
         })
 
     # ── De-escalation signals ──
@@ -948,21 +799,15 @@ def _score_green_lines(scan_data):
          'ukraine negotiations', 'ukraine peace talks', 'ukraine ceasefire']
     )
     russia_pullback = _scan_articles(
-        ['russia_military', 'ukraine', 'russia_government'],
+        ['russia_military', 'ukraine'],
         ['russia withdraws', 'russia pulls back', 'russia reduces troops',
-         'russian drawdown', 'russia military reduction',
-         'putin ceasefire', 'easter ceasefire', 'russia ceasefire ukraine',
-         'putin orders halt', 'putin pause', 'russian troops halt',
-         'пасхальное перемирие', 'перемирие путин']
+         'russian drawdown', 'russia military reduction']
     )
     ukraine_openness = _scan_articles(
         ['ukraine'],
         ['zelenskyy open to talks', 'ukraine willing to negotiate',
          'ukraine ceasefire terms', 'zelenskyy peace proposal',
-         'ukraine accepts negotiations', 'ukraine peace conditions',
-         'optimistic about talks', 'talks with russia', 'peace talks russia',
-         'zelensky office optimistic', 'will not take long', 'compromise sought',
-         'us involvement talks', 'negotiations progress']
+         'ukraine accepts negotiations', 'ukraine peace conditions']
     )
     nato_russia_dialog = _scan_articles(
         ['nato_alliance', 'russia_government'],
@@ -1121,6 +966,16 @@ def _match_historical(scan_data):
                   'Hybrid active', weight=1)
         if 'arctic_elevated' in sigs:
             check(arctic_level >= 2, 'Arctic elevated', weight=2)
+        if 'russia_cuba_weapons' in sigs:
+            # v1.1: check if russia_cuba_kinetic_weapons_transfer red line is breached
+            triggered_ids = scan_data.get('_triggered_red_line_ids', [])
+            cuba_weapons_active = (
+                'russia_cuba_kinetic_weapons_transfer' in triggered_ids
+                or 'russia_iran_cuba_coalition_active' in triggered_ids
+            )
+            check(cuba_weapons_active,
+                  '1962-pattern Cuba weapons-staging active', weight=4)
+
         if 'ukraine_weak' in sigs:
             check(gnd_level >= 3, 'Ukraine front under pressure', weight=1)
 
@@ -1248,8 +1103,63 @@ def _build_so_what(scan_data, red_lines_triggered, historical_matches,
             f'Watch Ukraine territorial concessions language as the key indicator.'
         )
 
+    # ─── v1.1: CARIBBEAN FOOTHOLD RECOGNITION (6th frame question) ───
+    # Detect when Russia is forward-staging kinetic capability in Cuba —
+    # structurally distinct from traditional SIGINT/oil access patterns.
+    breached_ids = [r.get('id') for r in red_lines_triggered if r.get('status') == 'BREACHED']
+    cuba_weapons_breached     = 'russia_cuba_kinetic_weapons_transfer' in breached_ids
+    cuban_soldiers_breached   = 'russia_cuban_soldiers_procurement' in breached_ids
+    ru_ir_coalition_breached  = 'russia_iran_cuba_coalition_active' in breached_ids
+
+    if ru_ir_coalition_breached:
+        situation_parts.append(
+            'CARIBBEAN FOOTHOLD — 1962 PATTERN ACTIVE: Russia and Iran are simultaneously '
+            'forward-staging weapons or military capability in Cuba — the multilateralized '
+            '21st-century revival of the October 1962 Cuban Missile Crisis doctrinal frame. '
+            'This is qualitatively different from traditional Russia-Cuba access patterns '
+            '(Lourdes SIGINT, Rosneft tankers). Coalition staging increases ambiguity and '
+            'reduces deterrence clarity. The 1962 precedent reached 13 days of confrontation '
+            'and nearly produced nuclear war; the 2026 case offers no obvious symmetric trade '
+            'space (no NATO Turkey-missiles analog). Treat as STRATEGIC, not tactical.'
+        )
+    elif cuba_weapons_breached:
+        situation_parts.append(
+            'CARIBBEAN FOOTHOLD DEVELOPING: Russia transferring kinetic weapons (drones, '
+            'advanced systems) to Cuba — structurally distinct from traditional SIGINT or '
+            'oil access. Forward-staging strike capability 90 miles from US territory is the '
+            'canonical October 1962 Caribbean foothold pattern. Watch for Iran parallel '
+            'transfers (which would upgrade to coalition staging) and US executive cadence '
+            'response (the Venezuela January 2026 raid was preceded by 21-day sequencing).'
+        )
+
+    if cuban_soldiers_breached:
+        situation_parts.append(
+            'FOREIGN MILITARY PROCUREMENT (Cuban soldiers): Russia procuring ~5,000 Cuban '
+            'soldiers at ~$25,000/soldier for Ukraine operations. Foreign-military-labor '
+            'commercialization revives the Cold War Cuban-internationalist pattern '
+            '(Angola, Ethiopia) but with hard-currency compensation flowing to a regime '
+            'in fiscal crisis. This deepens Cuban dependency on Russia for foreign exchange '
+            '— a structural lever beyond episodic SIGINT or oil access.'
+        )
+
     # ── Key indicators ──
     indicators = []
+
+    # v1.1: Caribbean Foothold indicator (priority — listed first when active)
+    if ru_ir_coalition_breached:
+        indicators.append(
+            '🚨 CARIBBEAN FOOTHOLD COALITION WATCH: Russia + Iran forward-staging active. '
+            'Monitor Mariel/Cienfuegos port traffic, Russian/Iranian cargo flights to Havana, '
+            'US executive cadence response (Venezuela 2026 precedent: 21-day sequencing to '
+            'kinetic action). Highest-confidence Western Hemisphere coalition-threat signal.'
+        )
+    elif cuba_weapons_breached:
+        indicators.append(
+            'CARIBBEAN FOOTHOLD WATCH: Russia kinetic weapons transfer to Cuba detected. '
+            'Watch for Iran parallel transfers, Cuban defense reorganization announcements, '
+            'and US executive response cadence (CIA director visits, DOJ Cuba indictments, '
+            'Sec-Def/State congressional posture-setting).'
+        )
 
     if nuclear_level >= 3:
         indicators.append(
@@ -1365,6 +1275,16 @@ def _build_so_what(scan_data, red_lines_triggered, historical_matches,
 # PUBLIC ENTRY POINT
 # ============================================================
 
+def _inject_triggered_ids(scan_data, red_lines_triggered):
+    """v1.1 helper: inject triggered red-line IDs into scan_data so downstream
+    functions (like _match_historical) can check which red lines are active."""
+    if isinstance(scan_data, dict):
+        scan_data['_triggered_red_line_ids'] = [
+            r.get('id') for r in (red_lines_triggered or []) if r.get('status') == 'BREACHED'
+        ]
+    return scan_data
+
+
 def interpret_signals(scan_data):
     """
     Main entry point. Called from rhetoric_tracker_russia.py or app.py.
@@ -1374,6 +1294,9 @@ def interpret_signals(scan_data):
         red_lines   = _score_red_lines(scan_data)
         green_lines = _score_green_lines(scan_data)
         diplomatic  = _score_diplomatic_track(scan_data, green_lines)
+        # v1.1: inject triggered red-line IDs so _match_historical can detect
+        # 1962-pattern signals (russia_cuba_weapons, etc)
+        scan_data = _inject_triggered_ids(scan_data, red_lines)
         historical  = _match_historical(scan_data)
         so_what     = _build_so_what(scan_data, red_lines, historical,
                                      green_lines, diplomatic)
@@ -1381,10 +1304,6 @@ def interpret_signals(scan_data):
         breached    = [r for r in red_lines if r['status'] == 'BREACHED']
         approaching = [r for r in red_lines if r['status'] == 'APPROACHING']
         active_gl   = [g for g in green_lines if g['status'] == 'ACTIVE']
-
-        # Phase 4 Gold Standard — extract commodity leverage signals (May 6 2026)
-        # Non-fatal: empty list if commodity proxy cache cold or all alerts normal
-        commodity_signals = _extract_commodity_leverage_signals(scan_data)
 
         return {
             'so_what':             so_what,
@@ -1402,12 +1321,7 @@ def interpret_signals(scan_data):
             },
             'diplomatic_track':    diplomatic,
             'historical_matches':  historical,
-            # Phase 4 Gold Standard — commodity leverage signals for BLUF/GPI consumption
-            # Each signal is hybrid 2-sentence: data point + strategic framing
-            # Filter: only HIGH/SURGE global alert (signal hygiene)
-            'commodity_signals':   commodity_signals,
-            'commodity_active':    len(commodity_signals) > 0,
-            'interpreter_version': '1.1.0-commodity-aware',
+            'interpreter_version': '1.0.0',
             'interpreted_at':      datetime.now(timezone.utc).isoformat(),
         }
 
@@ -1419,9 +1333,7 @@ def interpret_signals(scan_data):
             'green_lines':        {'triggered': [], 'active_count': 0, 'signaled_count': 0, 'diplomatic_score': 0},
             'diplomatic_track':   {'score': 0, 'scenario': 'Unknown', 'maximum_pressure': False},
             'historical_matches': [],
-            'commodity_signals':  [],
-            'commodity_active':   False,
-            'interpreter_version': '1.1.0-commodity-aware',
+            'interpreter_version': '1.0.0',
             'error':              str(e)[:200],
         }
 
@@ -1502,293 +1414,3 @@ if __name__ == '__main__':
         print(f'  {hm["similarity"]}% -- {hm["label"]} | Confidence: {hm["confidence"]}')
     print(f'\nDIPLOMATIC TRACK: score={result["diplomatic_track"]["score"]}, '
           f'max_pressure={result["diplomatic_track"]["maximum_pressure"]}')
-
-
-# ============================================================
-# v2.0+ — TOP SIGNALS (BLUF / GPI consumable)
-# ============================================================
-# Builds canonical top_signals[] for Europe Regional BLUF + GPI.
-# Russia is the richest tracker in the platform: 5 vectors (nuclear, ground_ops,
-# nato_flank, arctic, hybrid) plus red_lines, green_lines, diplomatic_track.
-
-RUSSIA_FLAG = '\U0001f1f7\U0001f1fa'  # 🇷🇺
-
-def build_top_signals(scan_data):
-    """
-    Build Russia's top_signals[] for BLUF/GPI consumption.
-    Reads from scan_data dict (post-interpret_signals output).
-    Russia uses ME-pattern: result['interpretation'] wraps so_what / red_lines / green_lines.
-    Returns sorted list (descending priority).
-    """
-    signals = []
-
-    # Russia stores interpreter output under 'interpretation' wrapper
-    interp = scan_data.get('interpretation', {}) or {}
-    so_what     = interp.get('so_what', {}) or {}
-    red_lines   = interp.get('red_lines', {}) or {}
-    green_lines = interp.get('green_lines', {}) or {}
-    diplomatic  = interp.get('diplomatic_track', {}) or {}
-
-    # Theatre-level fields at top of scan_data
-    theatre_level = scan_data.get('theatre_level', 0) or 0
-    theatre_score = scan_data.get('theatre_score', 0) or 0
-
-    # Vector levels
-    nuclear   = scan_data.get('nuclear_level', 0) or 0
-    ground    = scan_data.get('ground_ops_level', 0) or 0
-    nato_flank = scan_data.get('nato_flank_level', 0) or 0
-    arctic    = scan_data.get('arctic_level', 0) or 0
-    hybrid    = scan_data.get('hybrid_level', 0) or 0
-
-    # Red/green line triggered lists
-    rl_triggered = red_lines.get('triggered', []) or []
-    breached = [r for r in rl_triggered if isinstance(r, dict) and r.get('status') == 'BREACHED']
-    approaching = [r for r in rl_triggered if isinstance(r, dict) and r.get('status') == 'APPROACHING']
-    gl_triggered = green_lines.get('triggered', []) or []
-    active_gl = [g for g in gl_triggered if isinstance(g, dict) and g.get('status') == 'ACTIVE']
-
-    # ============================================
-    # 1. RED LINES BREACHED (highest priority)
-    # ============================================
-    for rl in breached[:3]:
-        label    = rl.get('label', 'Red line')
-        severity = rl.get('severity', 5) or 5
-        signals.append({
-            'priority':   12,
-            'category':   'red_line_breached',
-            'theatre':    'russia',
-            'level':      max(theatre_level, 4),
-            'icon':       rl.get('icon', '🚨'),
-            'color':      '#dc2626',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: BREACH — {label[:55]}',
-            'long_text':  f'RUSSIA red line breached (severity {severity}): {label}',
-        })
-
-    for rl in approaching[:2]:
-        label = rl.get('label', 'Red line')
-        signals.append({
-            'priority':   8,
-            'category':   'red_line_approaching',
-            'theatre':    'russia',
-            'level':      theatre_level,
-            'icon':       '🟠',
-            'color':      '#f97316',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Approaching — {label[:50]}',
-            'long_text':  f'RUSSIA approaching red line: {label}',
-        })
-
-    # ============================================
-    # 2. THEATRE-HIGH (overall L4+)
-    # ============================================
-    if theatre_level >= 4:
-        signals.append({
-            'priority':   9 + theatre_level,
-            'category':   'theatre_high',
-            'theatre':    'russia',
-            'level':      theatre_level,
-            'icon':       '🔴',
-            'color':      '#dc2626' if theatre_level >= 5 else '#ef4444',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA L{theatre_level} — Composite pressure',
-            'long_text':  f'RUSSIA at L{theatre_level} composite pressure (score {theatre_score}/100). '
-                          f'Multi-vector activity: nuclear L{nuclear}, ground L{ground}, NATO L{nato_flank}, arctic L{arctic}.',
-        })
-
-    # ============================================
-    # 3. NUCLEAR SIGNALING (Russia-specific KEY signal)
-    # ============================================
-    nuclear_elevated = so_what.get('nuclear_elevated', False)
-    if nuclear >= 4:
-        signals.append({
-            'priority':   13,
-            'category':   'nuclear_signaling',
-            'theatre':    'russia',
-            'level':      nuclear,
-            'icon':       '☢️',
-            'color':      '#dc2626',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Nuclear signaling L{nuclear}',
-            'long_text':  f'RUSSIA nuclear coercion vector L{nuclear} — explicit nuclear language detected, '
-                          f'doctrinal threshold approached. Highest-stakes signal in Europe theater.',
-        })
-    elif nuclear >= 3 or nuclear_elevated:
-        signals.append({
-            'priority':   10,
-            'category':   'nuclear_signaling',
-            'theatre':    'russia',
-            'level':      nuclear,
-            'icon':       '☢️',
-            'color':      '#ef4444',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Nuclear signaling L{nuclear}',
-            'long_text':  f'RUSSIA nuclear signaling L{nuclear} — coercion threshold elevated, watch for doctrine shifts.',
-        })
-
-    # ============================================
-    # 4. GROUND OPERATIONS (Ukraine front)
-    # ============================================
-    if ground >= 4:
-        signals.append({
-            'priority':   10,
-            'category':   'ground_operations',
-            'theatre':    'russia',
-            'level':      ground,
-            'icon':       '⚔️',
-            'color':      '#dc2626',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Ground ops L{ground}',
-            'long_text':  f'RUSSIA ground operations L{ground} — major Ukrainian-front activity, '
-                          f'kinetic tempo at incident-or-above level.',
-        })
-
-    # ============================================
-    # 5. NATO FLANK (Baltic/Suwalki/Kaliningrad)
-    # ============================================
-    if nato_flank >= 4:
-        signals.append({
-            'priority':   10,
-            'category':   'nato_flank',
-            'theatre':    'russia',
-            'level':      nato_flank,
-            'icon':       '🛡️',
-            'color':      '#dc2626',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: NATO flank pressure L{nato_flank}',
-            'long_text':  f'RUSSIA NATO-flank pressure L{nato_flank} — Suwalki Gap, Baltic, '
-                          f'or Kaliningrad signals at incident threshold.',
-        })
-    elif nato_flank >= 3:
-        signals.append({
-            'priority':   7,
-            'category':   'nato_flank',
-            'theatre':    'russia',
-            'level':      nato_flank,
-            'icon':       '🛡️',
-            'color':      '#f97316',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: NATO flank L{nato_flank}',
-            'long_text':  f'RUSSIA NATO-flank signaling L{nato_flank} — Baltic states warrant elevated monitoring.',
-        })
-
-    # ============================================
-    # 6. ARCTIC POSTURING (cross-Arctic with Greenland)
-    # ============================================
-    arctic_elevated = so_what.get('arctic_elevated', False)
-    if arctic >= 4:
-        signals.append({
-            'priority':   9,
-            'category':   'arctic_posture',
-            'theatre':    'russia',
-            'level':      arctic,
-            'icon':       '🧊',
-            'color':      '#0ea5e9',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Arctic posture L{arctic}',
-            'long_text':  f'RUSSIA Arctic militarization L{arctic} — Northern Fleet, NSR claims, '
-                          f'or icebreaker movements at incident level.',
-        })
-    elif arctic >= 3 or arctic_elevated:
-        signals.append({
-            'priority':   6,
-            'category':   'arctic_posture',
-            'theatre':    'russia',
-            'level':      arctic,
-            'icon':       '🧊',
-            'color':      '#0ea5e9',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Arctic L{arctic}',
-            'long_text':  f'RUSSIA Arctic activity L{arctic} — Northern Fleet posture elevated.',
-        })
-
-    # ============================================
-    # 7. HYBRID OPERATIONS (sabotage, cyber, GPS jamming)
-    # ============================================
-    if hybrid >= 4:
-        signals.append({
-            'priority':   8,
-            'category':   'hybrid_ops',
-            'theatre':    'russia',
-            'level':      hybrid,
-            'icon':       '🕵️',
-            'color':      '#a855f7',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Hybrid ops L{hybrid}',
-            'long_text':  f'RUSSIA hybrid activity L{hybrid} — sabotage, GPS jamming, '
-                          f'sub-cable interference, or cyber incidents at incident level.',
-        })
-
-    # ============================================
-    # 8. MAXIMUM PRESSURE FLAG (multi-vector convergence)
-    # ============================================
-    maximum_pressure = so_what.get('maximum_pressure', False)
-    high_vector_count = so_what.get('high_vector_count', 0) or 0
-    if maximum_pressure:
-        signals.append({
-            'priority':   11,
-            'category':   'maximum_pressure',
-            'theatre':    'russia',
-            'level':      max(theatre_level, 4),
-            'icon':       '🌀',
-            'color':      '#dc2626',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Maximum pressure ({high_vector_count} vectors L3+)',
-            'long_text':  f'RUSSIA multi-vector convergence — {high_vector_count} of 5 vectors at L3+ '
-                          f'simultaneously; coordinated coercion campaign, classic max-pressure signaling.',
-        })
-
-    # ============================================
-    # 9. GREEN LINES ACTIVE (de-escalation signals)
-    # ============================================
-    for gl in active_gl[:2]:
-        label = gl.get('label', 'De-escalation signal')
-        signals.append({
-            'priority':   6,
-            'category':   'green_line_active',
-            'theatre':    'russia',
-            'level':      max(0, theatre_level - 1),
-            'icon':       '🟢',
-            'color':      '#22c55e',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: De-escalation — {label[:50]}',
-            'long_text':  f'RUSSIA de-escalation signal active: {label}. Diplomatic / off-ramp tempo elevated.',
-        })
-
-    # ============================================
-    # 10. DIPLOMATIC TRACK
-    # ============================================
-    diplomatic_score = so_what.get('diplomatic_score', 0) or 0
-    diplomatic_scenario = so_what.get('diplomatic_scenario', '') or ''
-    if diplomatic_score >= 60:
-        signals.append({
-            'priority':   7,
-            'category':   'diplomatic_active',
-            'theatre':    'russia',
-            'level':      max(0, theatre_level - 1),
-            'icon':       '🕊️',
-            'color':      '#22c55e',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Diplomatic track {diplomatic_score}',
-            'long_text':  f'RUSSIA diplomatic track score {diplomatic_score} — {diplomatic_scenario}. '
-                          f'Potential off-ramp window.',
-        })
-
-    # ============================================
-    # 11. CROSS-THEATER FINGERPRINT FLAGS
-    # ============================================
-    # Russia tracker writes cross-theater fingerprints (iran_russia_active,
-    # dprk_russia_active, etc.); these are cross-theater tells but not always
-    # surfaced in interpretation. Pull from scan_data root if present.
-    if scan_data.get('iran_russia_active'):
-        signals.append({
-            'priority':   7,
-            'category':   'crosstheater_iran_russia',
-            'theatre':    'russia',
-            'level':      3,
-            'icon':       '🤝',
-            'color':      '#7c3aed',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: Iran-Russia coordination active',
-            'long_text':  'RUSSIA-IRAN axis active — Shahed transfers, weapons cooperation, or coordinated diplomatic posture.',
-        })
-    if scan_data.get('dprk_russia_active'):
-        signals.append({
-            'priority':   7,
-            'category':   'crosstheater_dprk_russia',
-            'theatre':    'russia',
-            'level':      3,
-            'icon':       '🤝',
-            'color':      '#7c3aed',
-            'short_text': f'{RUSSIA_FLAG} RUSSIA: DPRK-Russia coordination active',
-            'long_text':  'RUSSIA-DPRK axis active — North Korean ammunition / troops / weapons transfers documented.',
-        })
-
-    # Sort descending; BLUF will dedupe + globally rank
-    signals.sort(key=lambda s: s['priority'], reverse=True)
-    return signals
