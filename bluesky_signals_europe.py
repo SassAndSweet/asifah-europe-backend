@@ -97,8 +97,8 @@ BLUESKY_ACCOUNTS_EUROPE = [
     # ── govmirrors fallbacks for X-only accounts ──────────────
     ('realdonaldtrump.govmirrors.com', 1.2, ['greenland', 'ukraine', 'russia', 'poland', 'hungary', 'belarus'],
         'Trump (X mirror) — Greenland/Ukraine/NATO/Belarus statements'),
-    ('secrubio.govmirrors.com',        1.1, ['greenland', 'ukraine', 'russia', 'poland', 'belarus'],
-        'US SecState Rubio (X mirror) — Europe/Arctic/Belarus policy'),
+    ('secrubio.govmirrors.com',        1.1, ['greenland', 'ukraine', 'russia', 'poland', 'hungary', 'belarus'],
+        'US SecState Rubio (X mirror) -- Europe/Arctic/Belarus/Hungary policy'),
     ('modrussia.govmirrors.com',       1.1, ['russia', 'ukraine', 'belarus'],
         'Russian MoD (X mirror) — official claims; Belarus deployment relevant'),
     ('mfarussia.govmirrors.com',       1.0, ['russia', 'ukraine', 'belarus'],
@@ -252,6 +252,21 @@ def fetch_belarus_bluesky_signals(days=7, max_posts_per_account=20):
 def fetch_ukraine_bluesky_signals(days=7, max_posts_per_account=20):
     """Bluesky posts relevant to Ukraine tracker."""
     return fetch_bluesky_for_target('ukraine',
+                                    days=days,
+                                    max_posts_per_account=max_posts_per_account)
+
+
+def fetch_hungary_bluesky_signals(days=7, max_posts_per_account=20):
+    """Bluesky posts relevant to Hungary tracker (v1.0.0 May 17 2026).
+
+    Currently surfaces Hungary mentions via existing govmirror accounts
+    (potus.govmirrors.com, realdonaldtrump.govmirrors.com, secrubio,
+    euvsdisinfo) that already have 'hungary' in their targets list.
+    Hungary-specific native accounts (Tisza party, opposition voices,
+    Hungarian MFA) can be added to BLUESKY_ACCOUNTS_EUROPE in C2.5
+    when those accounts are verified live on Bluesky.
+    """
+    return fetch_bluesky_for_target('hungary',
                                     days=days,
                                     max_posts_per_account=max_posts_per_account)
 
