@@ -391,6 +391,22 @@ GREEN_LINES = [
         'source':   'Arctic Council suspended after 2022 invasion. '
                     'Re-engagement would signal broader diplomatic opening.',
     },
+    {
+        'id':       'hungary_eu_veto_vehicle_lost',
+        'label':    'Hungary EU Veto Vehicle Lost (Axis Reversal)',
+        'detail':   'April 2026 Tisza/Magyar election ended 16 years of Orban government -- '
+                    'Russia loses primary EU veto blocker. Hungary lifts Ukraine loan veto, '
+                    'returns Oschadbank assets, restores NATO weapons transit. '
+                    'Hybrid influence operations card lost in EU institutional decision-making.',
+        'momentum': 3,
+        'color':    '#10b981',
+        'icon':     '🏛️',
+        'category': 'eu_influence_loss',
+        'source':   'Hungary cross-theater fingerprints (axis_reversal_active, '
+                    'orban_revival_signal, hungary_russia_axis_level). '
+                    'Structural EU-level de-escalation for Russia hybrid operations. '
+                    'Orban revival signal would REVERSE this green line.',
+    },
 ]
 
 
@@ -864,6 +880,34 @@ def _score_green_lines(scan_data):
             'trigger': 'Arctic Council re-engagement signals detected',
         })
 
+    # ── Hungary axis reversal green line (added May 18 2026) ──
+    # Reads cross-theater fingerprints injected by tracker via scan_data.
+    # Active when Hungary's axis-reversal pattern is firing AND the Russia-Hungary
+    # axis level has dropped (Russia is on the losing end of the reversal).
+    # Reversed if orban_revival_signal fires.
+    hu_axis_reversal = scan_data.get('hungary_axis_reversal_active', False)
+    hu_orban_revival = scan_data.get('hungary_orban_revival_signal', False)
+    hu_russia_axis_level = scan_data.get('hungary_russia_axis_level', 0)
+
+    if hu_axis_reversal and not hu_orban_revival:
+        if hu_russia_axis_level <= 2:
+            hu_status = 'ACTIVE'
+            hu_trigger = (
+                f'Hungary axis reversal confirmed; Russia-Hungary axis at L{hu_russia_axis_level} '
+                f'(reversed from pre-election baseline). EU veto vehicle lost.'
+            )
+        else:
+            hu_status = 'SIGNALED'
+            hu_trigger = (
+                f'Hungary axis reversal detected but Russia-Hungary axis still elevated '
+                f'at L{hu_russia_axis_level} -- monitoring for sustained reversal.'
+            )
+        triggered.append({
+            **next(g for g in GREEN_LINES if g['id'] == 'hungary_eu_veto_vehicle_lost'),
+            'status':  hu_status,
+            'trigger': hu_trigger,
+        })
+
     triggered.sort(key=lambda x: -x['momentum'])
     return triggered
 
@@ -1142,9 +1186,46 @@ def _build_so_what(scan_data, red_lines_triggered, historical_matches,
             '— a structural lever beyond episodic SIGINT or oil access.'
         )
 
+    # ── Hungary axis reversal narrative (added May 18 2026) ──
+    # The April 2026 Tisza/Magyar election is one of the most consequential
+    # structural shifts for Russia in 2026: loss of primary EU veto vehicle.
+    hu_axis_reversal = scan_data.get('hungary_axis_reversal_active', False)
+    hu_orban_revival = scan_data.get('hungary_orban_revival_signal', False)
+    hu_russia_axis_level = scan_data.get('hungary_russia_axis_level', 0)
+    hu_ukraine_track_level = scan_data.get('hungary_ukraine_track_level', 0)
+    hu_druzhba_status = scan_data.get('druzhba_pipeline_status', 'unknown')
+
+    if hu_axis_reversal and not hu_orban_revival:
+        druzhba_clause = ''
+        if hu_druzhba_status == 'flowing':
+            druzhba_clause = ' Druzhba flows resumed post-election under Tisza government oversight.'
+        elif hu_druzhba_status == 'disrupted':
+            druzhba_clause = ' Druzhba pipeline currently disrupted -- monitor for repair cadence.'
+        situation_parts.append(
+            f'HUNGARY AXIS REVERSAL ACTIVE: Russia has lost its primary EU veto vehicle. '
+            f'Tisza/Magyar government (post-April 12 2026 election) drives EU re-integration, '
+            f'lifted Ukraine loan veto, restored NATO weapons transit, returned $82M Oschadbank '
+            f'shipment. Russia-Hungary axis at L{hu_russia_axis_level} (reversed from pre-election '
+            f'baseline). Hungary-Ukraine bilateral track at L{hu_ukraine_track_level} -- normalization '
+            f'pathway open (Transcarpathia minority dispute, Magyar pledged "strong NATO ally").'
+            f'{druzhba_clause} '
+            f'Strategic consequence: hybrid influence operations card lost in EU institutional '
+            f'decision-making. Russia\'s remaining EU-sympathetic vectors narrow to Slovakia and '
+            f'Serbia. Watch for compensatory escalation on Ukraine front or accelerated hybrid '
+            f'pressure on Slovakia (Fico) and SPS Serbia.'
+        )
+    elif hu_orban_revival:
+        situation_parts.append(
+            f'HUNGARY ORBAN REVIVAL SIGNAL: Counter-narrative detected -- Orban/Fidesz '
+            f'opposition mobilization signals present (Moscow visits, Tucker Carlson media, '
+            f'Article 7 defiance language). Hungary-Russia axis at L{hu_russia_axis_level}. '
+            f'If sustained, would reverse the post-April 2026 EU re-integration trajectory '
+            f'and restore Russia\'s primary EU veto vehicle. Monitor Tisza government '
+            f'cohesion + Fidesz street mobilization cadence.'
+        )
+
     # ── Key indicators ──
     indicators = []
-
     # v1.1: Caribbean Foothold indicator (priority — listed first when active)
     if ru_ir_coalition_breached:
         indicators.append(
