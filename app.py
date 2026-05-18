@@ -101,6 +101,22 @@ except ImportError as e:
     UKRAINE_RHETORIC_AVAILABLE = False
     print(f"[Europe Backend] ⚠️ Ukraine rhetoric tracker not available: {e}")
 
+# Hungary rhetoric tracker + signals interpreter (v1.0 -- May 17, 2026)
+# First Asifah tracker for a country undergoing axis reversal (post-Apr 2026 Tisza
+# landslide). Emits cross-theater fingerprints: hungary_axis_reversal_active,
+# hungary_orban_revival_signal, druzhba_pipeline_status.
+try:
+    from rhetoric_tracker_hungary import (
+        register_hungary_rhetoric_endpoints,
+        start_background_refresh as start_hungary_rhetoric_refresh,
+    )
+    from hungary_signal_interpreter import interpret_signals as hungary_interpret_signals
+    HUNGARY_RHETORIC_AVAILABLE = True
+    print("[Europe Backend] ✅ Hungary rhetoric tracker loaded")
+except ImportError as e:
+    HUNGARY_RHETORIC_AVAILABLE = False
+    print(f"[Europe Backend] ⚠️ Hungary rhetoric tracker not available: {e}")
+
 # Russia stability index
 try:
     from russia_stability import register_russia_stability_endpoints
@@ -4152,6 +4168,12 @@ if UKRAINE_RHETORIC_AVAILABLE:
     register_ukraine_rhetoric_endpoints(app)
     start_ukraine_rhetoric_refresh()
     print("[Europe Backend] ✅ Ukraine rhetoric routes registered + refresh started")
+
+# Register Hungary rhetoric tracker (v1.0 -- May 17, 2026)
+if HUNGARY_RHETORIC_AVAILABLE:
+    register_hungary_rhetoric_endpoints(app)
+    start_hungary_rhetoric_refresh()
+    print("[Europe Backend] ✅ Hungary rhetoric routes registered + refresh started")
 
 # Register Russia stability index
 if RUSSIA_STABILITY_AVAILABLE:
