@@ -54,8 +54,8 @@ TRACKER_KEYS = {
     'greenland': 'rhetoric:greenland:latest',
     'ukraine':   'rhetoric:ukraine:latest',
     'belarus':   'rhetoric:belarus:latest',
+    'hungary':   'rhetoric:hungary:latest',   # v1.0 May 17 2026 -- axis reversal tracker
     # Future Europe trackers slot in here:
-    # 'hungary':  'rhetoric:hungary:latest',
     # 'poland':   'rhetoric:poland:latest',
     # 'baltics':  'rhetoric:baltics:latest',
 }
