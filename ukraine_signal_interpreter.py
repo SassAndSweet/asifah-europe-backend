@@ -315,6 +315,39 @@ GREEN_LINES = [
             'lugano follow on',
         ],
     },
+    {
+        'id':       'hungary_bilateral_normalization',
+        'category': 'Bilateral',
+        'title':    'Hungary Bilateral Normalization Active',
+        'description':
+            'Post-April 2026 Tisza/Magyar government has reversed 16 years of '
+            'Orban-era anti-Ukraine policy. Hungary lifted Ukraine EU loan veto, '
+            'returned $82M Oschadbank cash + gold shipment seized in March, '
+            'pledged "strong NATO ally" posture, signaled openness to resolve '
+            'Transcarpathia ethnic Hungarian minority dispute. Removes Putin\'s '
+            'primary EU veto vehicle and restores NATO consensus on weapons transit.',
+        'triggers_active': [
+            'hungary returns ukraine 82 million',
+            'hungary returns oschadbank',
+            'hungary returns ukrainian gold',
+            'hungary returns ukrainian valuables',
+            'hungary lifts loan veto',
+            'hungary unlocks eu loan',
+            'hungary eu funds released',
+            'zelensky magyar summit',
+            'magyar zelensky',
+            'hungary lifts ukraine accession veto',
+            'tisza government supports ukraine',
+        ],
+        'triggers_signaled': [
+            'magyar tisza government',
+            'hungary new government ukraine',
+            'orban concedes',
+            'hungary article 7 closed',
+            'hungary nato ally pledge',
+            'hungary returns gold ukraine',
+        ],
+    },
 ]
 
 
@@ -575,6 +608,32 @@ def _build_so_what(scan_data, red_lines_triggered, green_lines_triggered,
         gl_titles = ', '.join(g['title'] for g in active_gl[:2])
         assessment_parts.append(f"Active de-escalation indicators: {gl_titles}.")
 
+    # ── Hungary bilateral normalization narrative (added May 18 2026) ──
+    # Even though active_gl above names the green line, the structural
+    # significance of Hungary's axis reversal deserves explicit articulation.
+    hungary_gl = next(
+        (g for g in green_lines_triggered if g['id'] == 'hungary_bilateral_normalization'),
+        None
+    )
+    if hungary_gl and hungary_gl['status'] == 'ACTIVE':
+        assessment_parts.append(
+            "Hungary axis reversal CONFIRMED: April 2026 Tisza/Magyar election ended "
+            "16 years of Orban-era anti-Ukraine policy. Hungary lifted Ukraine EU loan "
+            "veto (90 billion euro package unblocked), returned 82 million dollar "
+            "Oschadbank cash and gold shipment, restored NATO weapons transit, "
+            "pledged 'strong NATO ally' posture. Removes Putin's primary EU veto "
+            "vehicle. Transcarpathia ethnic Hungarian minority normalization pathway "
+            "opened. Diplomatic track receives durable bilateral support beyond "
+            "ceasefire-specific signals."
+        )
+    elif hungary_gl and hungary_gl['status'] == 'SIGNALED':
+        assessment_parts.append(
+            "Hungary bilateral normalization SIGNALED: Tisza/Magyar government "
+            "post-election signals are detected but not yet confirmed at concrete "
+            "action level. Monitor for: Oschadbank asset return execution, EU loan "
+            "veto formal lift, NATO weapons transit restoration."
+        )
+
     if commodity_signal and commodity_signal.get('alert') != 'normal':
         assessment_parts.append(
             f"Commodity pressure: {commodity_signal['alert']} "
@@ -664,9 +723,13 @@ def _build_top_signals(red_lines_triggered, green_lines_triggered,
 # CROSS-THEATER FINGERPRINTS
 # ============================================================
 
-def _build_fingerprints(red_lines_triggered, commodity_signal, scan_data):
+def _build_fingerprints(red_lines_triggered, green_lines_triggered,
+                       commodity_signal, scan_data):
     """
     Fingerprints written for downstream tracker consumption.
+
+    May 18 2026: Added green_lines_triggered parameter to enable Hungary
+    bilateral normalization fingerprints (read by Europe BLUF + GPI).
     """
     fingerprints = {
         'ukraine_drone_advisor_active':    False,
@@ -676,8 +739,12 @@ def _build_fingerprints(red_lines_triggered, commodity_signal, scan_data):
         'kyiv_under_strike':               False,
         'mobilization_crisis_active':      False,
         'energy_grid_pressure':            False,
+        # Hungary bilateral signals (added May 18 2026)
+        'ukraine_hungary_normalization':   'dormant',  # 'active'/'signaled'/'dormant'
+        'ukraine_eu_loan_veto_status':     'blocked',  # 'unblocked'/'partial'/'blocked'
     }
 
+    # Red-line driven fingerprints (existing)
     for r in red_lines_triggered:
         if r['status'] in ('BREACHED', 'APPROACHING'):
             if r['id'] == 'drone_advisor_export_disclosed':
@@ -700,6 +767,16 @@ def _build_fingerprints(red_lines_triggered, commodity_signal, scan_data):
             elif r['id'] == 'energy_grid_collapse':
                 fingerprints['energy_grid_pressure'] = True
 
+    # Green-line driven fingerprints (added May 18 2026)
+    for g in green_lines_triggered:
+        if g['id'] == 'hungary_bilateral_normalization':
+            if g['status'] == 'ACTIVE':
+                fingerprints['ukraine_hungary_normalization'] = 'active'
+                fingerprints['ukraine_eu_loan_veto_status']   = 'unblocked'
+            elif g['status'] == 'SIGNALED':
+                fingerprints['ukraine_hungary_normalization'] = 'signaled'
+                fingerprints['ukraine_eu_loan_veto_status']   = 'partial'
+
     return fingerprints
 
 
@@ -721,7 +798,7 @@ def interpret_signals(scan_data):
                                         diplomatic, commodity_sig)
         top_signals    = _build_top_signals(red_lines, green_lines,
                                             diplomatic, commodity_sig, scan_data)
-        fingerprints   = _build_fingerprints(red_lines, commodity_sig, scan_data)
+        fingerprints   = _build_fingerprints(red_lines, green_lines, commodity_sig, scan_data)
 
         breached    = [r for r in red_lines if r['status'] == 'BREACHED']
         approaching = [r for r in red_lines if r['status'] == 'APPROACHING']
