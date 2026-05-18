@@ -1062,8 +1062,12 @@ def run_hungary_scan():
 # ============================================================
 # FLASK ROUTE REGISTRATION
 # ============================================================
-def register_hungary_rhetoric_routes(app):
-    """Register Hungary rhetoric tracker endpoints on Flask app."""
+def register_hungary_rhetoric_endpoints(app):
+    """Register Hungary rhetoric tracker endpoints on Flask app.
+
+    Naming convention matches existing Europe backend trackers
+    (Russia/Belarus/Ukraine all use _endpoints).
+    """
     from flask import jsonify, request
 
     @app.route('/api/rhetoric/hungary', methods=['GET'])
@@ -1155,6 +1159,67 @@ def register_hungary_rhetoric_routes(app):
         return jsonify({'success': True, 'history': history, 'count': len(history)})
 
     print('[Hungary Rhetoric] Endpoints registered: /api/rhetoric/hungary, /summary, /history')
+
+
+# ============================================================
+# BACKGROUND REFRESH (mirrors Russia/Belarus/Ukraine pattern)
+# ============================================================
+# 12-hour cadence background scanner that keeps Hungary tracker
+# data fresh without depending on /force=true calls from the
+# stability page or other consumers.
+
+_REFRESH_INTERVAL_SECONDS = 12 * 3600  # 12 hours
+_refresh_thread = None
+_refresh_stop_event = None
+
+
+def _background_refresh_loop():
+    """Daemon loop -- runs run_hungary_scan() every 12 hours."""
+    global _refresh_stop_event
+    import time as _time
+    while _refresh_stop_event is not None and not _refresh_stop_event.is_set():
+        try:
+            print('[Hungary Background] Starting scheduled scan...')
+            result = run_hungary_scan()
+            print(f'[Hungary Background] Scan complete: '
+                  f'L{result.get("theatre_level", "?")} '
+                  f'({result.get("theatre_label", "?")}), '
+                  f'{result.get("total_articles", 0)} articles')
+        except Exception as e:
+            print(f'[Hungary Background] Scan error: {str(e)[:120]}')
+        # Sleep in 60s chunks so the daemon can respond to stop signal
+        for _ in range(_REFRESH_INTERVAL_SECONDS // 60):
+            if _refresh_stop_event.is_set():
+                return
+            _time.sleep(60)
+
+
+def start_background_refresh():
+    """Start the 12hr background refresh thread (idempotent).
+
+    Called once from app.py during Flask init. Mirrors the pattern
+    used by rhetoric_tracker_russia / _belarus / _ukraine.
+    """
+    global _refresh_thread, _refresh_stop_event
+    if _refresh_thread and _refresh_thread.is_alive():
+        print('[Hungary Background] Refresh thread already running')
+        return
+    _refresh_stop_event = threading.Event()
+    _refresh_thread = threading.Thread(
+        target=_background_refresh_loop,
+        daemon=True,
+        name='HungaryRhetoricRefresh',
+    )
+    _refresh_thread.start()
+    print('[Hungary Background] 12hr refresh thread started')
+
+
+def stop_background_refresh():
+    """Stop the background refresh thread (called on shutdown)."""
+    global _refresh_stop_event
+    if _refresh_stop_event is not None:
+        _refresh_stop_event.set()
+        print('[Hungary Background] Refresh thread signaled to stop')
 
 
 # ============================================================
