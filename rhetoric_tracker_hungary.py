@@ -931,10 +931,36 @@ def _detect_cross_theater_signals(articles, actor_results):
         druzhba_status = 'repairing'
 
     # Emit cross-theater fingerprints (best-effort, non-blocking)
+    # Group A: pattern-level signals (booleans + enum)
+    # Group B: per-actor escalation levels (read by Russia + Ukraine + GPI)
     try:
+        # Group A -- pattern signals
         _crossteater_update('hungary_axis_reversal_active', axis_reversal_active)
         _crossteater_update('hungary_orban_revival_signal', orban_revival_signal)
         _crossteater_update('druzhba_pipeline_status', druzhba_status)
+
+        # Group B -- per-actor escalation levels (0-5 scale)
+        # Added May 18 2026 -- enables Russia + Ukraine cross-theater reads
+        _crossteater_update(
+            'hungary_government_level',
+            actor_results.get('hungary_government', {}).get('escalation_level', 0)
+        )
+        _crossteater_update(
+            'hungary_opposition_level',
+            actor_results.get('hungary_opposition', {}).get('escalation_level', 0)
+        )
+        _crossteater_update(
+            'hungary_eu_track_level',
+            actor_results.get('hungary_eu_track', {}).get('escalation_level', 0)
+        )
+        _crossteater_update(
+            'hungary_russia_axis_level',
+            actor_results.get('hungary_russia_axis', {}).get('escalation_level', 0)
+        )
+        _crossteater_update(
+            'hungary_ukraine_track_level',
+            actor_results.get('hungary_ukraine_track', {}).get('escalation_level', 0)
+        )
     except Exception as e:
         print(f'[Hungary Crossteater] emission error: {str(e)[:80]}')
 
