@@ -1918,6 +1918,51 @@ def _detect_conditional_threats(articles):
 # CROSS-THEATER FINGERPRINT
 # ============================================
 
+# ============================================
+# CROSS-THEATER READ -- HUNGARY (added May 18 2026)
+# ============================================
+# Reads Hungary's fingerprints from the shared Redis crossteater blob.
+# Hungary writes 8 keys: 3 pattern signals + 5 per-actor levels.
+# Russia interpreter consumes these via injected scan_data fields:
+#   - hungary_axis_reversal_active  -> green line trigger
+#   - hungary_orban_revival_signal  -> red line modifier
+#   - hungary_russia_axis_level     -> hybrid/influence vector enrichment
+#   - druzhba_pipeline_status       -> oil-flow context for so-what
+# Read failures are non-blocking; defaults to 0/False/'unknown'.
+
+def _read_hungary_signals():
+    """
+    Pull Hungary's cross-theater fingerprints from shared Redis blob.
+    Returns dict with safe defaults if Hungary tracker hasn't scanned yet
+    or if Redis is unreachable.
+    """
+    try:
+        blob = _redis_get(CROSSTHEATER_KEY) or {}
+        if not isinstance(blob, dict):
+            blob = {}
+        return {
+            'hungary_axis_reversal_active':  bool(blob.get('hungary_axis_reversal_active', False)),
+            'hungary_orban_revival_signal':  bool(blob.get('hungary_orban_revival_signal', False)),
+            'druzhba_pipeline_status':       str(blob.get('druzhba_pipeline_status', 'unknown')),
+            'hungary_government_level':      int(blob.get('hungary_government_level',    0) or 0),
+            'hungary_opposition_level':      int(blob.get('hungary_opposition_level',    0) or 0),
+            'hungary_eu_track_level':        int(blob.get('hungary_eu_track_level',      0) or 0),
+            'hungary_russia_axis_level':     int(blob.get('hungary_russia_axis_level',   0) or 0),
+            'hungary_ukraine_track_level':   int(blob.get('hungary_ukraine_track_level', 0) or 0),
+        }
+    except Exception as e:
+        print(f'[Russia Rhetoric] Hungary read error: {str(e)[:100]}')
+        return {
+            'hungary_axis_reversal_active':  False,
+            'hungary_orban_revival_signal':  False,
+            'druzhba_pipeline_status':       'unknown',
+            'hungary_government_level':      0,
+            'hungary_opposition_level':      0,
+            'hungary_eu_track_level':        0,
+            'hungary_russia_axis_level':     0,
+            'hungary_ukraine_track_level':   0,
+        }
+
 def _write_crosstheater_fingerprint(actor_results, vectors, regime_signals=None):
     """
     Write Russia signals to shared Redis cross-theater fingerprint key.
@@ -2088,6 +2133,16 @@ def run_russia_rhetoric_scan(force=False):
             'refresh_triggered':    True,
             'version':              '1.0.0',
         }
+
+        # ── Cross-theater READ: Hungary signals (added May 18 2026) ──
+        # Hungary axis reversal is one of the most consequential signals
+        # for Russia: it represents loss of Putin's primary EU veto vehicle.
+        # Injected here so Russia's interpreter can weave it into so-what.
+        hungary_signals = _read_hungary_signals()
+        result.update(hungary_signals)
+        if hungary_signals.get('hungary_axis_reversal_active'):
+            print(f"[Russia Rhetoric] Hungary axis reversal ACTIVE -- "
+                  f"axis_level={hungary_signals.get('hungary_russia_axis_level')}")
 
         # Wire signals interpreter
         try:
