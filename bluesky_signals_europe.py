@@ -74,11 +74,23 @@ BLUESKY_ACCOUNTS_EUROPE = [
     ('natohq.bsky.social',            1.0, ['*'],
         'NATO (official) — alliance posture, deployments, Article 5; covers Belarus border'),
 
-    # ── Ukraine — native Bluesky ───────────────────────────────
-    ('zelenskyyua.bsky.social',       1.2, ['ukraine', 'russia', 'belarus'],
-        'President Zelensky (if native) — direct statements; Belarus relevant for second-front concerns'),
+    # ── Ukraine — native Bluesky + verified mirrors ────────────
+    # v1.1.0 (May 24 2026): Replaced unverified zelenskyyua.bsky.social
+    # with verified zelensky-repost.bsky.social (volunteer-run mirror of
+    # Zelensky's X account, maintained by @hbouwmeester.bsky.social).
+    # The native account does not exist; original handle was 404ing
+    # silently every scan, losing all Zelensky signal.
+    # Trade-off: lower post volume vs. X (mirror lag ~minutes), but
+    # captures all public Zelensky statements including pre-strike
+    # warnings (e.g. May 23 2026 Oreshnik warning).
+    ('zelensky-repost.bsky.social',   1.2, ['ukraine', 'russia', 'belarus'],
+        'President Zelensky (X mirror via @hbouwmeester) — direct statements, '
+        'pre-strike warnings, ceasefire framing; Belarus relevant for second-front concerns'),
     ('mfa.gov.ua',                    1.1, ['ukraine', 'russia', 'belarus'],
         'Ukraine MFA (custom domain) — diplomatic signals; Belarus deployment monitoring'),
+    # Ukraine MoD via govmirrors (unverified — comment out if 404s)
+    ('defenceu.govmirrors.com',       1.0, ['ukraine', 'russia', 'belarus'],
+        'Ukraine MoD (X mirror, unverified) — operational reports, missile/drone strikes'),
 
     # ── European institutions — where available ────────────────
     # Many European institutional accounts are on Mastodon/EU Voice rather
