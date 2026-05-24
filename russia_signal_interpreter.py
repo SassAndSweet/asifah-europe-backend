@@ -556,10 +556,27 @@ def _score_red_lines(scan_data):
         return False
 
     # Signal detection
+    # v1.3 (May 24 2026) keyword expansion: original list was too analyst-tag
+    # and missed Oreshnik / hypersonic / news-language Putin-Medvedev
+    # warnings. Expanded for May 24 Oreshnik strike on Kyiv context.
     nuclear_signal = _scan_articles(
         ['russia_government', 'russia_military'],
-        ['nuclear', 'ядерн', 'medvedev nuclear', 'sarmat', 'poseidon',
-         'nuclear threat', 'nuclear warning', 'nuclear doctrine']
+        [
+            # original v1.2 keywords
+            'nuclear', 'ядерн', 'medvedev nuclear', 'sarmat', 'poseidon',
+            'nuclear threat', 'nuclear warning', 'nuclear doctrine',
+            # ── v1.3 expansion: Oreshnik / hypersonic doctrinal signals ──
+            'oreshnik', 'hypersonic missile', 'hypersonic strike',
+            'hypersonic ballistic', 'kinzhal', 'avangard', 'zircon',
+            # ── v1.3 expansion: principal-level nuclear language ──
+            'putin warns', 'putin threatens', 'putin nuclear',
+            'medvedev warns', 'medvedev threatens', 'medvedev says',
+            'kremlin warns', 'kremlin threatens',
+            # ── v1.3 expansion: news-language nuclear framings ──
+            'nuclear option', 'nuclear response', 'nuclear retaliation',
+            'nuclear use', 'tactical nuclear', 'nuclear weapons',
+            'belarus nuclear', 'nuclear alert', 'nuclear posture',
+        ]
     )
     kaliningrad_signal = _scan_articles(
         ['russia_military', 'baltic_flank'],
