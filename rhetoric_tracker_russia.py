@@ -172,6 +172,28 @@ ACTORS = {
             'sarmat missile', 'poseidon torpedo', 'kinzhal missile',
             'russia launches nuclear drill', 'nuclear exercise russia',
             'strategic missile forces russia',
+            # ── v1.2 (May 24 2026) — Oreshnik / hypersonic IRBM coverage ──
+            # Oreshnik = nuclear-capable medium-range hypersonic ballistic
+            # missile. Russia first used in Nov 2024 (Dnipro); second use
+            # Jan 2026 (Lviv). May 23 2026 Zelensky warned of third
+            # imminent use; mass strike on Kyiv overnight May 24.
+            # Treated as nuclear-axis signal because IRBM-class +
+            # nuclear-capable + doctrinal escalation marker.
+            'oreshnik', 'oreshnik missile', 'oreshnik launch',
+            'oreshnik strike ukraine', 'oreshnik hypersonic',
+            'oreshnik dnipro', 'oreshnik medium-range',
+            'russia hypersonic ballistic missile', 'hypersonic irbm russia',
+            'russia new ballistic missile', 'russia experimental missile',
+            'kedr missile russia', 'russia novel weapon',
+            'medium-range ballistic russia', 'intermediate-range missile russia',
+            'putin oreshnik', 'putin new missile',
+            # Combined / mass-strike command signals
+            'putin orders combined strike', 'putin retaliation strike',
+            'putin orders retaliation ukraine', 'russia combined strike command',
+            'russia mass strike command',
+            # Cyrillic
+            'орешник', 'гиперзвуковая ракета россия',
+            'орешник украина', 'новая ракета россия',
             # Arctic
             'northern fleet russia', 'russian arctic military',
             'russian ssbn patrol', 'russian submarine arctic',
@@ -292,6 +314,21 @@ ACTORS = {
             # Diplomatic posture
             'zelenskyy peace', 'ukraine peace talks',
             'ukraine ceasefire', 'ukraine negotiations',
+            # ── v1.2 (May 24 2026) — diplomatic-trending early signals ──
+            'zelensky open to talks', 'zelensky open negotiations',
+            'zelensky considers talks', 'zelensky peace offer',
+            'kyiv open to talks', 'kyiv negotiations possible',
+            'ukraine peace plan', 'ukraine 14-point plan',
+            'ukraine peace proposal', 'ukraine ceasefire proposal',
+            'ukraine ceasefire offer', 'ukraine off ramp',
+            'ukraine peace conference', 'ukraine peace summit',
+            'trump pressures zelensky', 'trump pressures ukraine',
+            'witkoff ukraine', 'witkoff kyiv',
+            'kellogg ukraine envoy', 'us envoy kyiv',
+            'european push ukraine peace', 'turkey mediation ukraine',
+            'china mediation ukraine', 'saudi mediation ukraine',
+            'leaked ukraine peace plan', 'reported ukraine peace plan',
+            'analyst ukraine ceasefire', 'rumored ukraine ceasefire',
             'ukraine territorial', 'ukraine concessions',
             'ukraine nato membership', 'ukraine security guarantees',
             'zelenskyy trump', 'ukraine minerals deal',
@@ -656,6 +693,14 @@ ACTORS = {
 
 # ── Vector 1: Nuclear Rhetoric ────────────────────────────────
 NUCLEAR_TRIGGERS = {
+    # v1.2 (May 24 2026): Added Oreshnik / IRBM-class signals.
+    # Rationale: Oreshnik is a nuclear-capable medium-range hypersonic
+    # ballistic missile (~5000km range). Russian use is a *doctrinal*
+    # escalation marker even when conventionally armed — it's the
+    # category of weapon nuclear-arms-control treaties (INF) once
+    # banned. Treating it as a nuclear-axis L3-4 signal even when used
+    # in conventional configuration. Reuters/Bellingcat/ISW consensus
+    # is that Oreshnik use signals nuclear-rung escalation intent.
     5: [
         'russia uses nuclear weapon', 'nuclear detonation russia',
         'tactical nuclear strike', 'russia nuclear attack',
@@ -670,6 +715,13 @@ NUCLEAR_TRIGGERS = {
         'russia places nuclear on alert', 'strategic forces alert',
         'nuclear weapons belarus deployed', 'sarmat test launch',
         'poseidon torpedo deployment', 'russia nuclear doctrine change',
+        # ── v1.2 — Oreshnik / IRBM-class doctrinal-escalation signals ──
+        'oreshnik strike confirmed', 'oreshnik launched ukraine',
+        'oreshnik launch ukraine', 'oreshnik hits ukraine',
+        'oreshnik used ukraine', 'russia launches oreshnik',
+        'russia fires hypersonic ballistic',
+        'russia hypersonic irbm launched', 'russia hypersonic launched',
+        'russia escalates ballistic', 'russia ballistic escalation',
     ],
     3: [
         'medvedev nuclear warning', 'russia nuclear threat nato',
@@ -680,6 +732,14 @@ NUCLEAR_TRIGGERS = {
         'russia nuclear exercise', 'strategic missile forces exercise',
         'russia warns nuclear response', 'nuclear deterrence russia',
         'russia hypersonic nuclear', 'russia nuclear rhetoric',
+        # ── v1.2 — Oreshnik / IRBM-class preparation / signaling ──
+        'oreshnik preparation', 'russia preparing oreshnik',
+        'oreshnik warning ukraine', 'oreshnik threat ukraine',
+        'putin oreshnik warning', 'putin threatens oreshnik',
+        'russia hypersonic capability oreshnik',
+        'oreshnik nuclear capable', 'oreshnik medium range',
+        'russia irbm signaling', 'russia intermediate range signaling',
+        'оружие судного дня', 'орешник россия',
         'ядерное оружие НАТО', 'ядерный удар',
     ],
     2: [
