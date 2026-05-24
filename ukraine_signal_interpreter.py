@@ -135,6 +135,39 @@ RED_LINES = [
         ],
     },
     {
+        'id':       'pre_strike_warning_issued',
+        'category': 'Pre-Strike Indicator',
+        'title':    'Ukrainian Pre-Strike Warning Issued (Imminent Russian Attack)',
+        'severity': 3,
+        'description':
+            'Zelensky or Ukrainian intelligence publicly discloses '
+            'intel — typically sourced from US/UK partners — about an '
+            'imminent Russian missile or drone strike. Pattern: warning is '
+            'issued hours before kinetic activity. Historical precedent: '
+            'May 23 2026 Oreshnik warning preceded May 24 mass strike on '
+            'Kyiv (>50 missiles + 700 drones) by ~6 hours. US Embassy Kyiv '
+            'security alerts to citizens are a corroborating signal. This '
+            'is a NARROW analytical window — typically 6-24h from warning '
+            'to strike — and a high-signal early-warning indicator.',
+        'triggers_breached': [
+            'oreshnik strike confirmed', 'oreshnik launched',
+            'hypersonic launched at ukraine', 'mass attack confirmed',
+            'combined strike underway', 'air raid alert nationwide ukraine',
+        ],
+        'triggers_approaching': [
+            'zelensky warns russia preparing', 'zelensky warning oreshnik',
+            'zelensky warning hypersonic', 'zelensky strike warning',
+            'zelensky pre-strike warning', 'ukraine intelligence russia preparing',
+            'ukrainian intelligence indicates russia preparing',
+            'ukraine intel hypersonic', 'us embassy kyiv security alert',
+            'us embassy kyiv warns', 'embassy kyiv shelter',
+            'kyiv warns of imminent strike', 'ukraine prepares air defense',
+            'russia preparing combined strike', 'signs of preparation strike',
+            'kyiv intel imminent attack', 'partners warn russia strike',
+            'european partners warn russia preparing',
+        ],
+    },
+    {
         'id':       'kyiv_strike_significant',
         'category': 'Strategic Strike',
         'title':    'Significant Strike on Kyiv',
@@ -143,14 +176,29 @@ RED_LINES = [
             'Major Russian strike against Kyiv with civilian casualties or '
             'significant infrastructure damage — government district, '
             'mass civilian targets, presidential or military command '
-            'facilities.',
+            'facilities. v1.1 (May 24 2026): expanded for Oreshnik / '
+            'hypersonic IRBM / mass combined missile-drone attack signatures '
+            '(e.g. May 24 2026 attack: >50 missiles + 700 drones on Kyiv).',
         'triggers_breached': [
             'kyiv strike major', 'kyiv casualties mass', 'kyiv attack civilian',
             'presidential building hit', 'kyiv government strike',
+            # ── v1.1 — mass + novel-weapon breach signatures ──
+            'oreshnik strike kyiv', 'oreshnik hits ukraine',
+            'hypersonic strike kyiv', 'hypersonic missile hits ukraine',
+            'mass missile attack kyiv', 'combined strike kyiv casualties',
+            '700 drones ukraine', 'russia largest attack ukraine',
+            'kyiv multiple districts damaged', 'damage in every district kyiv',
         ],
         'triggers_approaching': [
             'kyiv attacked', 'kyiv shahed', 'air raid kyiv',
             'kyiv missile', 'air defense kyiv',
+            # ── v1.1 — pre-strike / scale-of-attack approaching signals ──
+            'oreshnik preparing', 'russia preparing oreshnik',
+            'hypersonic missile preparation russia', 'russia preparing strike',
+            'preparing combined strike ukraine', 'combined strike preparation',
+            'mass attack preparation', 'overnight strike kyiv',
+            'salvo attack approaching', 'wave of missiles incoming',
+            'polish jets scramble', 'nato jets scramble ukraine',
         ],
     },
     {
@@ -243,14 +291,64 @@ GREEN_LINES = [
         'description':
             'Concrete ceasefire negotiation framework underway — named '
             'envoys, agreed venue, line-of-contact discussions, prisoner '
-            'exchange momentum.',
+            'exchange momentum. v1.1 (May 24 2026): Expanded with broader '
+            'keyword set tuned to catch EARLY-TREND signals (analyst pieces, '
+            'social/Reddit chatter, leaked frameworks, columnist op-eds, '
+            'Trump statements about Ukraine peace) BEFORE a formal framework '
+            'emerges. Currently NO active ceasefire track but architecture is '
+            'in place to detect tilt toward one.',
         'triggers_active': [
             'ceasefire framework', 'ceasefire negotiation', 'minsk format revived',
             'istanbul format', 'witkoff zelensky', 'negotiated settlement framework',
+            # ── v1.1 — additional concrete-framework signals ──
+            'ukraine ceasefire agreement', 'ukraine peace deal signed',
+            'ukraine peace agreement signed', 'ukraine ceasefire signed',
+            'ukraine ceasefire announced', 'russia ukraine ceasefire signed',
+            'ukraine us russia framework', 'ukraine framework agreement',
+            'ukraine peace framework signed', 'witkoff putin ukraine',
+            'kellogg ukraine envoy', 'keith kellogg ukraine',
+            'trump putin ukraine deal', 'trump putin ukraine framework',
+            'ukraine 14-point peace plan', 'ukraine peace plan agreed',
+            'line of contact agreed', 'ukraine territorial concession',
+            'ukraine eu fast track', 'ukraine nato pathway agreed',
         ],
         'triggers_signaled': [
             'ceasefire talks', 'negotiation possibility',
             'diplomatic opening ukraine',
+            # ── v1.1 — early-trend / soft / chatter signals ──
+            'trump ukraine peace', 'trump push ukraine peace',
+            'trump pressures zelensky', 'trump pressures ukraine',
+            'trump pressures russia', 'trump pressures putin',
+            'trump ukraine deal', 'trump zelensky deal',
+            'us push ukraine ceasefire', 'witkoff ukraine envoy',
+            'witkoff ukraine mission', 'witkoff kyiv visit',
+            'witkoff moscow visit', 'witkoff zelensky meeting',
+            'kellogg ukraine plan', 'us envoy kyiv',
+            'us envoy moscow ukraine', 'ukraine negotiations possible',
+            'putin signals talks', 'putin open to talks',
+            'putin negotiations possible', 'kremlin signals openness',
+            'lavrov ukraine talks', 'lavrov negotiations possible',
+            'zelensky open negotiations', 'zelensky considers talks',
+            'zelensky willing talks', 'zelensky talks possible',
+            'zelensky peace offer', 'ukraine peace offer',
+            'kyiv negotiations possible', 'kyiv open to talks',
+            'european push ceasefire', 'european push peace ukraine',
+            'macron ukraine peace', 'starmer ukraine peace',
+            'merz ukraine peace', 'erdogan ukraine peace',
+            'turkey mediation ukraine', 'china mediation ukraine',
+            'india mediation ukraine', 'saudi mediation ukraine',
+            'ukraine peace conference', 'peace summit ukraine',
+            'ukraine peace summit announced',
+            'ukraine ceasefire possibility', 'ukraine deal possibility',
+            'ceasefire trial balloon', 'leaked ceasefire framework',
+            'leaked peace plan ukraine', 'reported peace plan ukraine',
+            'reported ceasefire framework', 'rumored ukraine ceasefire',
+            'ukraine ceasefire speculation', 'analysts ukraine ceasefire',
+            'reuters ukraine peace', 'ft ukraine peace plan',
+            'wsj ukraine peace plan', 'bloomberg ukraine peace',
+            'ap ukraine ceasefire', 'ukraine off ramp',
+            'путин переговоры украина', 'мирный план украина',
+            'переговоры украина прекращение', 'witkoff украина',
         ],
     },
     {
@@ -529,9 +627,31 @@ def _fetch_commodity_signal():
 # ============================================================
 
 CEASEFIRE_TRIGGERS = [
+    # ── Concrete-framework signals (original) ──
     'ceasefire negotiation', 'witkoff zelensky', 'istanbul format',
     'minsk format revived', 'envoy ukraine russia',
     'переговоры украина', 'мирный процесс',
+    # ── v1.1 (May 24 2026) — Earlier-trend signals ──
+    # Anything from analyst commentary to leaked frameworks to social
+    # chatter that suggests the diplomatic track is warming.
+    'trump putin ukraine', 'trump zelensky deal', 'trump ukraine peace',
+    'witkoff ukraine', 'witkoff kyiv', 'witkoff moscow',
+    'witkoff putin ukraine', 'kellogg ukraine envoy',
+    'us envoy ukraine', 'us envoy moscow ukraine',
+    'ukraine ceasefire framework', 'ukraine peace framework',
+    'ukraine peace plan', 'ukraine 14-point plan',
+    'ukraine peace conference', 'ukraine peace summit',
+    'putin open negotiations', 'putin signals talks',
+    'kremlin signals openness', 'kremlin negotiations possible',
+    'zelensky open talks', 'zelensky open negotiations',
+    'zelensky peace offer', 'kyiv ceasefire offer',
+    'turkey mediates ukraine', 'china mediates ukraine',
+    'saudi mediates ukraine', 'european push ukraine peace',
+    'leaked peace plan ukraine', 'leaked ceasefire framework',
+    'reported ukraine peace plan', 'analyst ukraine ceasefire',
+    'ukraine off ramp', 'ukraine de-escalation',
+    'мирный план украина', 'трамп путин украина',
+    'переговоры прекращение украина',
 ]
 
 
