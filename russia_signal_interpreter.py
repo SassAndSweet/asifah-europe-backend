@@ -804,31 +804,72 @@ def _score_green_lines(scan_data):
                     return True
         return False
 
+    # v1.2 (May 24 2026): All green-line scan keyword sets expanded
+    # to catch EARLY-TREND signals. Pattern: catch the diplomatic warming
+    # in analyst commentary / op-eds / leaked frameworks / mediator
+    # activity BEFORE a formal track emerges. Mirror Ukraine interpreter
+    # v1.1 expansion for cross-theater consistency.
     trump_putin = _scan_articles(
         ['united_states', 'russia_government'],
         ['trump putin meeting', 'trump putin call', 'trump putin talks',
-         'us russia summit', 'trump ukraine deal', 'trump russia negotiate']
+         'us russia summit', 'trump ukraine deal', 'trump russia negotiate',
+         # ── v1.2 — early trend ──
+         'trump pressures putin', 'trump pressures russia',
+         'trump putin direct', 'trump putin envoy', 'trump putin framework',
+         'witkoff putin', 'witkoff moscow', 'witkoff kremlin',
+         'kellogg russia', 'kellogg moscow', 'kellogg ukraine envoy',
+         'us envoy moscow', 'us special envoy russia',
+         'us russia framework discussions', 'us russia channel',
+         'us russia back channel', 'trump kremlin contact']
     )
     ceasefire = _scan_articles(
         ['ukraine', 'united_states', 'russia_government'],
         ['ceasefire ukraine', 'ukraine peace deal', 'peace framework ukraine',
-         'ukraine negotiations', 'ukraine peace talks', 'ukraine ceasefire']
+         'ukraine negotiations', 'ukraine peace talks', 'ukraine ceasefire',
+         # ── v1.2 — early-trend / chatter / leaked ──
+         'ukraine ceasefire framework', 'ukraine ceasefire signed',
+         'ukraine peace agreement signed', 'ukraine peace plan',
+         'ukraine 14-point plan', 'ukraine peace proposal',
+         'ukraine off ramp', 'ukraine de-escalation framework',
+         'leaked peace plan ukraine', 'leaked ceasefire framework',
+         'reported peace plan ukraine', 'rumored ukraine ceasefire',
+         'analyst ukraine ceasefire', 'columnist ukraine peace',
+         'ukraine peace summit', 'ukraine peace conference',
+         'turkey mediates ukraine', 'china mediates ukraine',
+         'saudi mediates ukraine', 'india mediates ukraine',
+         'european push ukraine peace', 'macron ukraine peace plan',
+         'starmer ukraine peace plan', 'merz ukraine peace plan',
+         'erdogan ukraine peace plan']
     )
     russia_pullback = _scan_articles(
         ['russia_military', 'ukraine'],
         ['russia withdraws', 'russia pulls back', 'russia reduces troops',
-         'russian drawdown', 'russia military reduction']
+         'russian drawdown', 'russia military reduction',
+         # ── v1.2 — softer signals ──
+         'russia signals drawdown', 'russia hints withdrawal',
+         'russia front stabilization', 'russia pause offensive']
     )
     ukraine_openness = _scan_articles(
         ['ukraine'],
         ['zelenskyy open to talks', 'ukraine willing to negotiate',
          'ukraine ceasefire terms', 'zelenskyy peace proposal',
-         'ukraine accepts negotiations', 'ukraine peace conditions']
+         'ukraine accepts negotiations', 'ukraine peace conditions',
+         # ── v1.2 — early signaling / openness chatter ──
+         'zelensky open negotiations', 'zelensky considers talks',
+         'zelensky willing talks', 'zelensky peace offer',
+         'kyiv open to talks', 'kyiv signals openness',
+         'ukraine open negotiations', 'ukraine signals openness',
+         'ukraine considers ceasefire', 'ukraine softens position',
+         'ukraine territorial concession discussion',
+         'zelensky negotiating position evolution']
     )
     nato_russia_dialog = _scan_articles(
         ['nato_alliance', 'russia_government'],
         ['nato russia meeting', 'nato russia talks', 'nato russia dialogue',
-         'nato russia deconfliction', 'nato russia hotline']
+         'nato russia deconfliction', 'nato russia hotline',
+         # ── v1.2 — softer dialog signals ──
+         'nato russia channel', 'nato russia contact',
+         'nato russia restore communication', 'lavrov nato meeting']
     )
     arctic_diplomacy = _scan_articles(
         ['arctic_watch', 'nato_alliance'],
