@@ -115,12 +115,34 @@ ACTORS = {
             'sanctions advocacy, reconstruction frameworks.'
         ),
         'keywords': [
-            'zelensky', 'volodymyr zelensky', 'office of the president ukraine',
+            'zelensky', 'volodymyr zelensky', 'zelenskyy',
+            'office of the president ukraine',
             'yermak', 'andriy yermak', 'ukrainian mfa', 'kuleba',
             'sybiha', 'andrii sybiha', 'ukrainian government',
             'cabinet of ministers ukraine', 'verkhovna rada',
             'shmyhal', 'denys shmyhal',
             'kyiv government', 'ukrainian presidency',
+            # ── v1.1 (May 24 2026) — Pre-strike warning / intel signaling ──
+            # Pattern: Zelensky receives intel from US/UK partners about
+            # imminent Russian missile strike, publicly warns Ukrainian
+            # citizens hours before. Most recent: May 23 2026 Oreshnik
+            # warning followed by mass strike on Kyiv overnight.
+            'zelensky warns', 'zelensky warning', 'zelensky intelligence',
+            'zelensky predicts', 'zelensky pre-strike',
+            'ukrainian intelligence indicates russia preparing',
+            'ukraine intel russia preparing', 'kyiv warns of strike',
+            'ukraine air defense preparing', 'ukraine readiness alert',
+            'kyiv pre-strike warning', 'us embassy kyiv security alert',
+            'embassy kyiv shelter alert', 'embassy kyiv warns',
+            'значущий повітряний удар', 'попередження про обстріл',
+            # ── v1.1 — Ceasefire / diplomatic trending (early signals) ──
+            'zelensky open to talks', 'zelensky negotiations',
+            'zelensky ceasefire', 'zelensky peace deal',
+            'zelensky willing to negotiate', 'kyiv open to talks',
+            'ukraine willing negotiations', 'ukraine accepts talks',
+            'ukraine peace proposal', 'ukraine ceasefire proposal',
+            'ukraine 14-point plan', 'ukraine peace plan',
+            'zelensky envoy', 'ukrainian envoy talks',
             'офис президента', 'верховная рада',
         ],
     },
@@ -166,7 +188,29 @@ ACTORS = {
             'kalibr strike', 'kalibr missile', 'kinzhal strike',
             'tornado-s', 'glide bomb', 'fab-1500',
             'russian missile strike ukraine', 'russian shelling',
+            # ── v1.1 (May 24 2026) — Oreshnik / hypersonic / IRBM coverage ──
+            # Zelensky warned May 23 2026 of imminent Oreshnik strike;
+            # massive combined missile + drone attack hit Kyiv overnight.
+            'oreshnik', 'oreshnik missile', 'oreshnik hypersonic',
+            'oreshnik strike', 'russia oreshnik launch',
+            'hypersonic missile ukraine', 'hypersonic ballistic missile',
+            'medium-range ballistic missile', 'irbm russia',
+            'intermediate-range missile russia', 'russia new missile',
+            'russia new ballistic missile', 'russia novel weapon',
+            'russia experimental missile', 'kedr missile',
+            # Combined / mass strike patterns
+            'mass missile attack ukraine', 'combined missile drone attack',
+            'massive russian strike', 'combined strike ukraine',
+            'wave of missiles ukraine', 'salvo attack ukraine',
+            'mass strike kyiv', '700 drones ukraine', 'drone barrage',
+            'overnight strike kyiv', 'russia largest attack',
+            'russia largest strike',
+            # Polish/allied air defense scramble (signals scale)
+            'polish jets scramble', 'nato jets scramble',
+            'allied fighters scrambled', 'polish air force scramble',
             'российские войска украина', 'шахед',
+            'орешник', 'гиперзвуковая ракета',
+            'новая ракета россия',
         ],
     },
     'us_government': {
