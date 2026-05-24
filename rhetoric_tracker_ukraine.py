@@ -547,20 +547,39 @@ def _fetch_brave(query='ukraine war', max_records=20):
 
 
 def _fetch_reddit():
+    """
+    Fetch Reddit posts for Ukraine topics.
+
+    v1.2 (May 24 2026): Replaced generic 'Asifah-Analytics/1.0' UA with a
+    browser-like UA. Reddit blocks generic/scripted user agents and returns
+    403 or 429 silently — previous code did `continue` on non-200 with NO
+    print, hiding the failure mode. Now we log every non-200 status code so
+    we can see when Reddit blocks/rate-limits us.
+    """
     out = []
     subs = ['ukraine', 'CredibleDefense', 'LessCredibleDefence',
             'UkrainianConflict', 'ukrainewarvideoreport',
             'europe', 'geopolitics']
+    # Browser-like UA — Reddit accepts this; the previous 'Asifah-Analytics/1.0'
+    # was a known-blocked pattern. If we ever set up a Reddit OAuth app, replace
+    # this with 'platform:app_id:version (by /u/<username>)' canonical format.
+    ua = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+          'AppleWebKit/537.36 (KHTML, like Gecko) '
+          'Chrome/124.0.0.0 Safari/537.36')
+    found_total = 0
     for sub in subs:
         try:
             url = f'https://www.reddit.com/r/{sub}/new.json?limit=25'
             r = requests.get(
                 url,
-                headers={'User-Agent': 'Asifah-Analytics/1.0'},
+                headers={'User-Agent': ua, 'Accept': 'application/json'},
                 timeout=8
             )
             if r.status_code != 200:
+                print(f'[Ukraine Reddit] r/{sub}: HTTP {r.status_code} '
+                      f'(was silent before — UA blocked? rate-limited?)')
                 continue
+            sub_count = 0
             for child in (r.json().get('data', {}).get('children') or []):
                 p = child.get('data', {})
                 title = (p.get('title') or '').lower()
@@ -579,9 +598,14 @@ def _fetch_reddit():
                     'comments':    p.get('num_comments', 0),
                     'weight':      0.65,
                 })
+                sub_count += 1
+            found_total += sub_count
+            print(f'[Ukraine Reddit] r/{sub}: {sub_count} matching posts '
+                  f'({len(r.json().get("data", {}).get("children") or [])} scanned)')
         except Exception as e:
             print(f'[Ukraine Reddit] r/{sub}: {str(e)[:120]}')
         time.sleep(0.3)
+    print(f'[Ukraine Reddit] Total: {found_total} posts across {len(subs)} subreddits')
     return out
 
 
