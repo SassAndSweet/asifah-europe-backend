@@ -187,6 +187,14 @@ def fetch_bluesky_account(handle, weight=1.0, limit=20, timeout=BLUESKY_TIMEOUT)
 
         if articles:
             print(f'[Bluesky] @{handle}: {len(articles)} posts')
+        else:
+            # v1.2 (May 24 2026): diagnostic — was silent on empty feeds, which
+            # made it impossible to distinguish "account returned 200 but no
+            # recent posts" from "account 404'd" from "account threw exception
+            # silently". Now logs zero-result cases too. If you see lots of
+            # "0 posts (200 OK, empty feed)" lines, the handle is probably
+            # dead or the account has gone inactive — flag for removal.
+            print(f'[Bluesky] @{handle}: 0 posts (200 OK, empty feed)')
         return articles
 
     except requests.exceptions.Timeout:
@@ -212,6 +220,9 @@ def fetch_bluesky_for_target(target, days=7, max_posts_per_account=20):
     all_posts = []
     seen_urls = set()
     accounts_queried = 0
+    posts_filtered_by_recency = 0   # v1.2 diagnostic
+    posts_filtered_by_dedup    = 0   # v1.2 diagnostic
+    posts_returned_raw         = 0   # v1.2 diagnostic
 
     for handle, weight, targets, desc in BLUESKY_ACCOUNTS_EUROPE:
         # Skip accounts not relevant to this target
@@ -220,9 +231,11 @@ def fetch_bluesky_for_target(target, days=7, max_posts_per_account=20):
 
         accounts_queried += 1
         posts = fetch_bluesky_account(handle, weight=weight, limit=max_posts_per_account)
+        posts_returned_raw += len(posts)
 
         for p in posts:
             if p['url'] in seen_urls:
+                posts_filtered_by_dedup += 1
                 continue
 
             # Recency filter
@@ -232,6 +245,7 @@ def fetch_bluesky_for_target(target, days=7, max_posts_per_account=20):
                 if pub.tzinfo is None:
                     pub = pub.replace(tzinfo=timezone.utc)
                 if pub < cutoff:
+                    posts_filtered_by_recency += 1
                     continue
             except Exception:
                 # If date parsing fails, keep the post (better than losing signal)
@@ -244,7 +258,16 @@ def fetch_bluesky_for_target(target, days=7, max_posts_per_account=20):
         # don't want to look abusive
         time.sleep(0.2)
 
-    print(f'[Bluesky] {target}: {len(all_posts)} posts from {accounts_queried} accounts queried')
+    # v1.2 (May 24 2026): expanded summary log so we can see WHERE posts
+    # are being filtered out — by recency? dedup? Or did the API return
+    # zero raw posts to begin with? Each scenario points to a different fix.
+    print(
+        f'[Bluesky] {target}: {len(all_posts)} posts kept '
+        f'(raw={posts_returned_raw}, '
+        f'cut_recency={posts_filtered_by_recency}, '
+        f'cut_dedup={posts_filtered_by_dedup}) '
+        f'from {accounts_queried} accounts queried'
+    )
     return all_posts
 
 # ────────────────────────────────────────────────────────────────
