@@ -126,12 +126,27 @@ RED_LINES = [
             'extended blackouts, heating failure during winter, water/sewage '
             'shutdowns. Triggers humanitarian and refugee surge dynamics.',
         'triggers_breached': [
+            # original analyst tags
             'grid collapse', 'blackout extended', 'heating failure',
             'thermal plant destroyed', 'substation strike critical',
+            # ── v1.2 (May 24 2026) news-language expansion ──
+            'thermal plant damaged', 'substation damaged', 'substation hit',
+            'substation destroyed', 'energy infrastructure destroyed',
+            'power grid collapse', 'electricity blackout', 'massive blackout',
+            'nationwide blackout', 'heating systems failed', 'no heating',
+            'no electricity', 'water supply disrupted', 'water system damaged',
+            'energy facilities destroyed',
         ],
         'triggers_approaching': [
+            # original analyst tags
             'energy strikes wave', 'power outage', 'shahed swarm',
             'grid damage major', 'rolling blackouts',
+            # ── v1.2 (May 24 2026) news-language expansion ──
+            'attack on energy', 'strike on energy', 'energy facility hit',
+            'power plant attacked', 'energy infrastructure attacked',
+            'shahed drones', 'drone swarm', 'mass drone attack',
+            'power cuts', 'electricity cuts', 'emergency blackouts',
+            'energy facilities damaged', 'attacks on power',
         ],
     },
     {
@@ -150,11 +165,21 @@ RED_LINES = [
             'is a NARROW analytical window — typically 6-24h from warning '
             'to strike — and a high-signal early-warning indicator.',
         'triggers_breached': [
+            # original v1.1
             'oreshnik strike confirmed', 'oreshnik launched',
             'hypersonic launched at ukraine', 'mass attack confirmed',
             'combined strike underway', 'air raid alert nationwide ukraine',
+            # ── v1.2 (May 24 2026) news-language expansion ──
+            'russia launches oreshnik', 'oreshnik missile launched',
+            'oreshnik fired', 'russia fires oreshnik',
+            'oreshnik used against ukraine', 'oreshnik strike ukraine',
+            'hypersonic missile launched ukraine', 'russia launches hypersonic',
+            'combined strike on ukraine', 'massive missile attack',
+            'mass missile attack ukraine', 'largest missile attack',
+            'wave of strikes ukraine',
         ],
         'triggers_approaching': [
+            # original v1.1
             'zelensky warns russia preparing', 'zelensky warning oreshnik',
             'zelensky warning hypersonic', 'zelensky strike warning',
             'zelensky pre-strike warning', 'ukraine intelligence russia preparing',
@@ -165,6 +190,16 @@ RED_LINES = [
             'russia preparing combined strike', 'signs of preparation strike',
             'kyiv intel imminent attack', 'partners warn russia strike',
             'european partners warn russia preparing',
+            # ── v1.2 (May 24 2026) news-language expansion ──
+            'zelensky warns', 'zelensky warned', 'zelensky says russia preparing',
+            'zelensky intelligence', 'ukrainian intelligence warns',
+            'ukrainian intel warns', 'intelligence indicates russia',
+            'kyiv warning', 'kyiv warns', 'kyiv intelligence warning',
+            'embassy security alert kyiv', 'embassy alert kyiv',
+            'embassy advisory kyiv', 'embassy warns americans kyiv',
+            'shelter in place kyiv', 'shelter-in-place kyiv',
+            'imminent strike ukraine', 'imminent attack ukraine',
+            'partners share intelligence ukraine',
         ],
     },
     {
@@ -188,6 +223,18 @@ RED_LINES = [
             'mass missile attack kyiv', 'combined strike kyiv casualties',
             '700 drones ukraine', 'russia largest attack ukraine',
             'kyiv multiple districts damaged', 'damage in every district kyiv',
+            # ── v1.2 (May 24 2026) news-language expansion ──
+            'russia attacks kyiv', 'attack on kyiv', 'strike on kyiv',
+            'missile strike kyiv', 'massive attack kyiv',
+            'large-scale attack kyiv', 'kyiv overnight', 'overnight attack kyiv',
+            'kyiv hit', 'oreshnik kyiv', 'hypersonic kyiv',
+            'cabinet of ministers', 'cabinet of ministers damaged',
+            'cabinet of ministers building', 'government building damaged kyiv',
+            'national bank kyiv', 'mfa damaged',
+            'foreign ministry damaged kyiv', 'civilians killed kyiv',
+            'killed in kyiv strike', 'kyiv casualties', 'kyiv civilian deaths',
+            'injured in kyiv', 'wounded in kyiv', 'kyiv buildings damaged',
+            'chornobyl museum kyiv', 'dsns kyiv',
         ],
         'triggers_approaching': [
             'kyiv attacked', 'kyiv shahed', 'air raid kyiv',
@@ -199,6 +246,13 @@ RED_LINES = [
             'mass attack preparation', 'overnight strike kyiv',
             'salvo attack approaching', 'wave of missiles incoming',
             'polish jets scramble', 'nato jets scramble ukraine',
+            # ── v1.2 (May 24 2026) news-language expansion ──
+            'kyiv region attack', 'kyiv region strike', 'attack kyiv region',
+            'shahed kyiv', 'drones over kyiv', 'air alert kyiv',
+            'air raid alert kyiv', 'air defense activated kyiv',
+            'explosions kyiv', 'explosions heard kyiv', 'kyiv damaged',
+            'damage in kyiv', 'fire in kyiv', 'kyiv district damaged',
+            'russian missiles kyiv', 'russian drones kyiv',
         ],
     },
     {
